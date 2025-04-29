@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace LibraryReporter.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : Controller // MainController
     {
         private readonly ILogger<HomeController> _logger;
 
