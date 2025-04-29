@@ -1,10 +1,7 @@
-﻿using Enums.Status;
-
-namespace LibraryReporter.Models.Book
+﻿namespace LibraryReporter.Models.Reader
 {
-    public class ReaderViewModel
+    public class ReaderCreationViewModel
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
 
@@ -12,6 +9,6 @@ namespace LibraryReporter.Models.Book
 
         public DateOnly Birtday { get; set; }
 
-        public DateOnly AddedDate { get; set; }
+
     }
 }

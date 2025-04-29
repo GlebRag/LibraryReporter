@@ -8,12 +8,11 @@
 <div class="tableBody">
 
     <div class="search-section">
-        <form method="post" action="/Home/SearchBooks" class="search-form">
-            <input type="text" name="name" placeholder="Введите название книги" class="search-input" id="Name" />
-            <input type="text" name="author" placeholder="Введите автора книги" class="search-input" id="Author" />
-            <input type="text" name="publisher" placeholder="Введите издателя" class="search-input" id="Publisher" />
-            <input type="text" name="price" placeholder="Введите цену" class="search-input" id="Price" />
-            <input type="number" name="count" placeholder="Введите количество" class="search-input" id="Count" min="0" />
+        <form method="post" action="/Reader/SearchReaders" class="search-form">
+            <input type="text" name="name" placeholder="Введите имя читателя" class="search-input" id="Name" />
+            <input type="text" name="surname" placeholder="Введите фамилию читателя" class="search-input" id="Surname" />
+            <input type="text" name="phonenumber" placeholder="Введите номер телефона" class="search-input" id="PhoneNumber" />
+            <input type="date" name="birthday" placeholder="Введите день рождения" class="search-input" id="Birthday" />
             <button type="submit" class="search-button">Найти</button>
         </form>
     </div>
@@ -28,17 +27,17 @@
                 @* @if (authService.IsAuthenticated())
                 {
                     <th>Купить</th>
-                }
+                } *@
                 @if (authService.IsLibraryModerator())
                 {
-                    <th>Изменить</th>
+                    @* <th>Изменить</th> *@
                     <th>Удалить</th>
-                } *@
+                }
             </tr>
             @if (authService.IsLibraryModerator())
             {
                 <div class="creation-order">
-                    <a class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200" href="/Home/CreateBookOrder">Добавить новую книгу</a>
+                    <a class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200" href="/Reader/CreateReader">Добавить читателя</a>
                 </div>
             }
         </thead>
@@ -58,24 +57,34 @@
                                 <img src="/images/buy-icon.png" alt="Купить" />
                             </a>
                         </td>
-                    }
+                    } *@
                     @if (authService.IsLibraryModerator())
                     {
-                        <td>
+                        @* <td>
                             <a href="/Home/EditBook?bookId=@book.Id" class="action-icon ">
                                 <img src="/images/edit-icon.png" alt="Изменить" />
                             </a>
-                        </td>
+                        </td> *@
                         <td>
-                            <a href="/Home/DeleteBook?bookId=@book.Id" class="action-icon">
+                            <a href="#" class="action-icon" onclick="confirmDelete('/Reader/DeleteReader?readerId=@reader.Id')">
                                 <img src="/images/delete-icon.png" alt="Удалить" />
                             </a>
                         </td>
-                    } *@
+                        
+                    }
                 </tr>
             }
         </tbody>
     </table>
 </div>
 
+<script>
+    function confirmDelete(url) {
+        if (confirm("Вы уверены, что хотите удалить этого читателя?")) {
+            // Если пользователь подтвердил, перенаправляем запрос на сервер
+            window.location.href = url;
+        }
+        // Если пользователь нажал "Отмена", ничего не происходит
+    }
+</script>
 

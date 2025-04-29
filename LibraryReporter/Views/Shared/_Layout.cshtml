@@ -29,44 +29,25 @@
                     </div>
                     <h1 class="font-title text-orange-950 text-2xl">LibraryReporter</h1>
                 </div>
-                <nav class="flex gap-6">
-                    <a href="/" class="text-neutral-950 hover:text-orange-500">Книги</a>
-                    
-                    @if (authService.IsAdmin())
-                    {
-                        <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Admin" asp-action="Users">Пользователи</a>
-                    }
-                    @if (authService.IsLibraryModerator())
-                    {
-                        <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Reader" asp-action="Index">Читатели</a>
-                        <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Author" asp-action="Index">Авторы</a>
-                        <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Publisher" asp-action="Index">Издатели</a>
-                    }
-                </nav>
-                <div class="flex items-center gap-4">
-                    @* @if (authService.IsAuthenticated())
-                    {
-                        <a href="/Home/UpdateLocale?language=@Language.En"
-                           class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200">
-                            En
-                        </a>
-                        <a href="/Home/UpdateLocale?language=@Language.Ru"
-                           class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200">
-                            Ru
-                        </a>
-                    }
-                    else
-                    {
-                        <a href="#" data-lang="@Language.En"
-                           class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200 unauth-lang">
-                            En
-                        </a>
-                        <a href="#" data-lang="@Language.Ru"
-                           class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200 unauth-lang">
-                            Ru
-                        </a>
+                <div class="flex justify-center">
+                    <nav class="flex gap-6">
+                        <a href="/" class="text-neutral-950 hover:text-orange-500">Книги</a>
 
-                    } *@
+                        @if (authService.IsAdmin())
+                        {
+                            <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Admin" asp-action="Users">Пользователи</a>
+                        }
+                        @if (authService.IsLibraryModerator())
+                        {
+                            <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Reader" asp-action="Index">Читатели</a>
+                            <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Author" asp-action="Index">Авторы</a>
+                            <a class="text-neutral-950 hover:text-orange-500" asp-area="" asp-controller="Publisher" asp-action="Index">Издатели</a>
+                        }
+                    </nav>
+                </div>
+                
+                <div class="flex items-center gap-4">
+
                     @if (!User.Identity?.IsAuthenticated ?? false)
                     {
                         <a class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200" asp-area="" asp-controller="Auth" asp-action="Login">Войти</a>

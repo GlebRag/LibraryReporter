@@ -1,0 +1,80 @@
+﻿@model LibraryReporter.Models.Author.AuthorCreationViewModel
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание книги</title>
+    <style>
+
+        .container {
+            margin-block: 45px;
+            max-width: 600px;
+            max-height: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .form-group label {
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                padding: 8px;
+                font-size: 16px;
+            }
+
+            .form-group img {
+                max-width: 100%;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .submit-btn:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body class="creationbook">
+    <div class="container">
+
+        <form action="/Author/CreateAuthor" method="post">
+            <div class="form-group">
+                <label for="title">Имя:</label>
+                <input type="text" id="@Model.Name" name="Name" placeholder="Введите имя автора">
+                @Html.ValidationMessageFor(x => x.Name)
+            </div>
+            <div class="form-group">
+                <label for="title">Фамилия:</label>
+                <input type="text" id="@Model.Surname" name="Surname" placeholder="Введите фамилию автора">
+                @Html.ValidationMessageFor(x => x.Surname)
+            </div>
+            <div class="form-group">
+                <label for="title">Номер телефона:</label>
+                <input type="text" id="@Model.PhoneNumber" name="PhoneNumber" placeholder="Введите номер телефона">
+                @Html.ValidationMessageFor(x => x.PhoneNumber)
+            </div>
+            <button type="submit" class="submit-btn">Добавить автора</button>
+        </form>
+    </div>
+
+</body>

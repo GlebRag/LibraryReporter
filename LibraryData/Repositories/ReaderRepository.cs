@@ -22,11 +22,12 @@ namespace LibraryReporter.Data.Repositories
     public interface IReaderRepositoryReal : IReaderRepository<ReaderData>
     {
         //void BuyBook(BookData dataBook, int userId);
-        //void Create(BookData dataBook);
+        void Create(ReaderData dataReader);
+        IEnumerable<ReaderData> SearchReader(string name, string surname, string phonenumber, DateOnly birthday);
         ////IEnumerable<BookData> GetBook(int userId);
         //void QuantityCounting(int bookId);
         //bool IsThisUserBoughtThisBook(int bookId, int userId);
-        
+
         //void Update(BookData dataBook, int bookId);
         //void UpdateCoverUrl(int bookId, string coverUrl);
         //void SaveBook(BookData dataBook, string? userName); //Для сохранения в Pdf
@@ -60,7 +61,7 @@ namespace LibraryReporter.Data.Repositories
         //    _webDbContext.SaveChanges();
 
         //    QuantityCounting(bookId);
-            
+
         //}
 
         //public void QuantityCounting(int bookId)
@@ -79,10 +80,10 @@ namespace LibraryReporter.Data.Repositories
         //    // Сохраняем изменения в базе данных
         //    _webDbContext.SaveChanges();
         //}
-        //public void Create(BookData dataBook)
-        //{
-        //    Add(dataBook);
-        //}
+        public void Create(ReaderData dataReader)
+        {
+            Add(dataReader);
+        }
 
         ////public IEnumerable<BookData> GetBook(int userId)
         ////{
@@ -90,7 +91,7 @@ namespace LibraryReporter.Data.Repositories
         ////    .Where(u => u.Id == userId)
         ////    .Select(u => u.BooksWhichUserTakes);
 
-            
+
         ////    return result.ToList();
 
         ////}
@@ -107,48 +108,43 @@ namespace LibraryReporter.Data.Repositories
 
         //}
 
-        //public IEnumerable<BookShortInfo> SearchBook(string name, string author, string publisher, decimal price, int count)
-        //{
-        //    var parameters = new List<SqlParameter>();
-        //    var sql = new StringBuilder("SELECT * FROM dbo.Books WHERE 1=1"); //Это условие всгеда истинно
+        public IEnumerable<ReaderData> SearchReader(string name, string surname, string phonenumber, DateOnly birthday)
+        {
+            var parameters = new List<SqlParameter>();
+            var sql = new StringBuilder("SELECT * FROM dbo.Readers WHERE 1=1"); //Это условие всгеда истинно
 
-        //    if (!string.IsNullOrEmpty(name))
-        //    {
-        //        sql.Append(" AND Name = @Name");
-        //        parameters.Add(new SqlParameter("@Name", name));
-        //    }
+            if (!string.IsNullOrEmpty(name))
+            {
+                sql.Append(" AND Name = @Name");
+                parameters.Add(new SqlParameter("@Name", name));
+            }
 
-        //    if (!string.IsNullOrEmpty(author))
-        //    {
-        //        sql.Append(" AND Author = @Author");
-        //        parameters.Add(new SqlParameter("@Author", author));
-        //    }
+            if (!string.IsNullOrEmpty(surname))
+            {
+                sql.Append(" AND Surname = @Surname");
+                parameters.Add(new SqlParameter("@Surname", surname));
+            }
 
-        //    if (!string.IsNullOrEmpty(publisher))
-        //    {
-        //        sql.Append(" AND Publisher = @Publisher");
-        //        parameters.Add(new SqlParameter("@Publisher", publisher));
-        //    }
+            if (!string.IsNullOrEmpty(phonenumber))
+            {
+                sql.Append(" AND PhoneNumber = @PhoneNumber");
+                parameters.Add(new SqlParameter("@PhoneNumber", phonenumber));
+            }
 
-        //    if (price != 0)
-        //    {
-        //        sql.Append(" AND Price = @Price");
-        //        parameters.Add(new SqlParameter("@Price", price));
-        //    }
+            if (birthday != DateOnly.MinValue)
+            {
+                sql.Append(" AND CONVERT(DATE, Birtday) = @Birtday"); // Преобразование даты без времени
+                parameters.Add(new SqlParameter("@Birtday", birthday.ToDateTime(TimeOnly.MinValue))); // Преобразуем DateOnly в DateTime
+            }
 
-        //    if (count != 0)
-        //    {
-        //        sql.Append(" AND Count = @Count");
-        //        parameters.Add(new SqlParameter("@Count", count));
-        //    }
 
-        //    var result = _webDbContext
-        //        .Database
-        //        .SqlQueryRaw<BookShortInfo>(sql.ToString(), parameters.ToArray())
-        //        .ToList();
+            var result = _webDbContext
+                .Database
+                .SqlQueryRaw<ReaderData>(sql.ToString(), parameters.ToArray())
+                .ToList();
 
-        //    return result;
-        //}
+            return result;
+        }
 
         //public void Update(BookData dataBook, int bookId)
         //{
@@ -169,6 +165,6 @@ namespace LibraryReporter.Data.Repositories
         //    _webDbContext.SaveChanges();
         //}
 
-        
+
     }
 }
