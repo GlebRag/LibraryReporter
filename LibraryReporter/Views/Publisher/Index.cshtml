@@ -1,4 +1,4 @@
-﻿@using LibraryReporter.Models.Book
+﻿@using LibraryReporter.Models.Publisher
 @using LibraryReporter.Services
 @model List<PublisherViewModel>
 @inject AuthService authService
@@ -28,7 +28,7 @@
                 } *@
                 @if (authService.IsLibraryModerator())
                 {
-                    @* <th>Изменить</th> *@
+                    <th>Изменить</th>
                     <th>Удалить</th>
                 }
             </tr>
@@ -57,11 +57,11 @@
                     } *@
                     @if (authService.IsLibraryModerator())
                     {
-                        @* <td>
-                            <a href="/Home/EditBook?bookId=@book.Id" class="action-icon ">
+                        <td>
+                            <a href="/Publisher/EditPublisher?publisherId=@publisher.Id" class="action-icon ">
                                 <img src="/images/edit-icon.png" alt="Изменить" />
                             </a>
-                        </td> *@
+                        </td>
                         <td>
                             <a href="#" class="action-icon" onclick="confirmDelete('/Publisher/DeletePublisher?publisherId=@publisher.Id')">
                                 <img src="/images/delete-icon.png" alt="Удалить" />

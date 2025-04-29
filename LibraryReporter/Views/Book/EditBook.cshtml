@@ -1,0 +1,108 @@
+﻿@model LibraryReporter.Models.Book.BookEditViewModel
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание книги</title>
+    <style>
+
+        .container {
+            margin-block: 45px;
+            max-width: 600px;
+            max-height: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .form-group label {
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                padding: 8px;
+                font-size: 16px;
+            }
+
+            .form-group img {
+                max-width: 100%;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .submit-btn:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body class="creationbook">
+    <div class="container">
+        <form action="/Book/EditBook" method="post" onsubmit="return confirmAction()">
+            <div class="form-group">
+                <label for="title">Название книги:</label>
+                <input type="text" id="@Model.BookName" name="BookName" placeholder="Введите название книги" value="@Model.BookName">
+                @Html.ValidationMessageFor(x => x.BookName)
+            </div>
+            <div class="form-group">
+                <label for="author">Автор:</label>
+                <select name="Author">
+                    <option value="@Model.Author" selected>@Model.Author</option> <!-- Переданное значение отображается первым -->
+                    @foreach (var authors in Model.Authors)
+                    {
+                        if (authors.Surname != Model.Author) // Исключаем дублирование переданного значения
+                        {
+                            <option value="@authors.Surname">@authors.Surname</option>
+                        }
+                    }
+                </select>
+                @* <input type="text" id="@Model.Author" name="Author" placeholder="Введите имя автора" value="@Model.Author">
+                @Html.ValidationMessageFor(x => x.Author) *@
+            </div>
+            <div class="form-group">
+                <label for="publisher">Издатель:</label>
+                <select name="Publisher">
+                    <option value="@Model.Publisher" selected>@Model.Publisher</option> <!-- Переданное значение отображается первым -->
+                    @foreach (var publishers in Model.Publishers)
+                    {
+                        if (publishers.Name != Model.Publisher) // Исключаем дублирование переданного значения
+                        {
+                            <option value="@publishers.Name">@publishers.Name</option>
+                        }
+                    }
+                </select>
+                @* <input type="text" id="@Model.Publisher" name="Publisher" placeholder="Введите издателя" value="@Model.Publisher">
+                @Html.ValidationMessageFor(x => x.Publisher) *@
+            </div>
+            <input type="hidden" id="@Model.Barcode" name="Barcode" value="@Model.Barcode">
+            <input type="hidden" id="@Model.Status" name="Status" value="@Model.Status">
+            <input type="hidden" id="@Model.Id" name="Id" value="@Model.Id">
+            <button type="submit" class="submit-btn">Изменить книгу</button>
+        </form>
+    </div>
+
+</body>
+
+<script>
+    function confirmAction() {
+        const confirmation = confirm("Вы уверены, что хотите внести изменения?");
+        return confirmation; // Если пользователь нажимает "Изменить", форма отправляется; если "Отмена", отправка прерывается
+    }
+</script>

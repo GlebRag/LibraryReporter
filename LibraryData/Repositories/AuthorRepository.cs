@@ -28,7 +28,7 @@ namespace LibraryReporter.Data.Repositories
         //void QuantityCounting(int bookId);
         //bool IsThisUserBoughtThisBook(int bookId, int userId);
 
-        //void Update(BookData dataBook, int bookId);
+        void Update(AuthorData dataAuthor, int authorId);
         //void UpdateCoverUrl(int bookId, string coverUrl);
         //void SaveBook(BookData dataBook, string? userName); //Для сохранения в Pdf
     }
@@ -139,17 +139,15 @@ namespace LibraryReporter.Data.Repositories
             return result;
         }
 
-        //public void Update(BookData dataBook, int bookId)
-        //{
-        //    var book = _dbSet.First(x => x.Id == bookId);
-        //    book.Name = dataBook.Name;
-        //    book.Author = dataBook.Author;
-        //    book.UrlCover = dataBook.UrlCover;
-        //    book.Publisher = dataBook.Publisher;
-        //    book.Price = dataBook.Price;
-        //    book.Count = dataBook.Count;
-        //    _webDbContext.SaveChanges();
-        //}
+        public void Update(AuthorData dataAuthor, int authorId)
+        {
+            var author = _dbSet.First(x => x.Id == authorId);
+            author.Name = dataAuthor.Name;
+            author.Surname = dataAuthor.Surname;
+            author.PhoneNumber = dataAuthor.PhoneNumber;
+            author.AddedDate = dataAuthor.AddedDate;
+            _webDbContext.SaveChanges();
+        }
 
         //public void UpdateCoverUrl(int bookId, string coverUrl)
         //{

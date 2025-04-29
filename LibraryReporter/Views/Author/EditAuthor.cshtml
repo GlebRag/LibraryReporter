@@ -1,0 +1,88 @@
+﻿@model LibraryReporter.Models.Author.AuthorViewModel
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание книги</title>
+    <style>
+
+        .container {
+            margin-block: 45px;
+            max-width: 600px;
+            max-height: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .form-group label {
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                padding: 8px;
+                font-size: 16px;
+            }
+
+            .form-group img {
+                max-width: 100%;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .submit-btn:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body class="creationbook">
+    <div class="container">
+        <form action="/Author/EditAuthor" method="post" onsubmit="return confirmAction()">
+            <div class="form-group">
+                <label for="title">Имя автора:</label>
+                <input type="text" id="@Model.Name" name="Name" placeholder="Введите имя автора" value="@Model.Name">
+                @Html.ValidationMessageFor(x => x.Name)
+            </div>
+            <div class="form-group">
+                <label for="surname">Фамилия автора:</label>
+                <input type="text" id="@Model.Surname" name="Surname" placeholder="Введите фамилию автора" value="@Model.Surname">
+                @Html.ValidationMessageFor(x => x.Surname)
+            </div>
+            <div class="form-group">
+                <label for="phonenumber">Номер телефона:</label>
+                <input type="text" id="@Model.PhoneNumber" name="PhoneNumber" placeholder="Введите номер телефона" value="@Model.PhoneNumber">
+                @Html.ValidationMessageFor(x => x.PhoneNumber)
+            </div>
+            <input type="hidden" id="@Model.AddedDate name="AddedDate" value="@Model.AddedDate">
+            <input type="hidden" id="@Model.Id" name="Id" value="@Model.Id">
+            <button type="submit" class="submit-btn">Изменить автора</button>
+        </form>
+    </div>
+
+</body>
+
+<script>
+    function confirmAction() {
+        const confirmation = confirm("Вы уверены, что хотите внести изменения?");
+        return confirmation; // Если пользователь нажимает "Изменить", форма отправляется; если "Отмена", отправка прерывается
+    }
+</script>

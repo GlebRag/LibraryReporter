@@ -10,6 +10,7 @@ using LibraryReporter.Controllers.AuthAttributes;
 using LibraryReporter.Data.Interfaces.Repositories;
 using LibraryReporter.Models.Author;
 using LibraryReporter.Models.Publisher;
+using LibraryReporter.Models.Reader;
 
 namespace LibraryReporter.Controllers
 {
@@ -125,6 +126,48 @@ namespace LibraryReporter.Controllers
                 .ToList();
 
             return View("Index", viewModels);
+        }
+
+        [HttpGet]
+        public IActionResult EditPublisher(int publisherId)
+        {
+            var viewModel = new PublisherViewModel();
+            var publisher = _webDbContext.Publishers.First(x => x.Id == publisherId);
+            viewModel.Name = publisher.Name;
+            viewModel.City = publisher.City;
+            viewModel.Email = publisher.Email;
+            viewModel.AddedDate = publisher.AddedDate;
+            viewModel.Id = publisherId;
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public IActionResult EditPublisher(PublisherViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+
+                return View(viewModel);
+            }
+
+            var publisherId = viewModel.Id;
+
+
+            var dataPublisher = new PublisherData
+            {
+                Name = viewModel.Name,
+                City = viewModel.City,
+                Email = viewModel.Email,
+                AddedDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+
+
+            _publisherRepository.Update(dataPublisher, publisherId);
+
+
+
+            return RedirectToAction("Index");
         }
     }
 }

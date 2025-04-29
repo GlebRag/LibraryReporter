@@ -1,6 +1,6 @@
 ﻿using Enums.Status;
 
-namespace LibraryReporter.Models.Book
+namespace LibraryReporter.Models.Author
 {
     public class AuthorViewModel
     {

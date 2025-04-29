@@ -171,5 +171,91 @@ namespace LibraryReporter.Controllers
 
             return View("Index", viewModels);
         }
+
+        [HttpGet]
+        public IActionResult EditBook(int bookId)
+        {
+            var authorsViewModels = _authorRepository
+                .GetAll()
+                .Select(x => new AuthorSurnameAndIdViewModel
+                {
+                    Id = x.Id,
+                    Surname = x.Surname
+                })
+                .ToList();
+
+            var publishersViewModels = _publisherRepository
+                .GetAll()
+                .Select(x => new PublisherNameAndIdViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToList();
+
+            var viewModel = new BookEditViewModel()
+            {
+                Authors = authorsViewModels,
+                Publishers = publishersViewModels
+            };
+            var book = _webDbContext.Books.First(x => x.Id == bookId);
+            viewModel.BookName = book.BookName;
+            viewModel.Author = book.Author;
+            viewModel.Publisher = book.Publisher;
+            viewModel.Barcode = book.Barcode;
+            viewModel.Status = StatusHelper.GetStatusDescription(book.Status);
+            viewModel.Id = bookId;
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public IActionResult EditBook(BookEditViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                var authorsViewModels = _authorRepository
+                .GetAll()
+                .Select(x => new AuthorSurnameAndIdViewModel
+                {
+                    Id = x.Id,
+                    Surname = x.Surname
+                })
+                .ToList();
+
+                var publishersViewModels = _publisherRepository
+                    .GetAll()
+                    .Select(x => new PublisherNameAndIdViewModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name
+                    })
+                    .ToList();
+
+                viewModel.Authors = authorsViewModels;
+                viewModel.Publishers = publishersViewModels;
+
+                return View(viewModel);
+            }
+
+            var bookId = viewModel.Id;
+
+
+            var dataBook = new BookData
+            {
+                BookName = viewModel.BookName,
+                Author = viewModel.Author,
+                Publisher = viewModel.Publisher,
+                Barcode = viewModel.Barcode,
+                Status = StatusHelper.GetStatusEnum(viewModel.Status)
+            };
+
+
+            _bookRepository.Update(dataBook, bookId);
+
+
+
+            return RedirectToAction("Index");
+        }
     }
 }

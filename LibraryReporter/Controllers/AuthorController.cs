@@ -126,5 +126,47 @@ namespace LibraryReporter.Controllers
 
             return View("Index", viewModels);
         }
+
+        [HttpGet]
+        public IActionResult EditAuthor(int authorId)
+        {
+            var viewModel = new AuthorViewModel();
+            var reader = _webDbContext.Authors.First(x => x.Id == authorId);
+            viewModel.Name = reader.Name;
+            viewModel.Surname = reader.Surname;
+            viewModel.PhoneNumber = reader.PhoneNumber;
+            viewModel.AddedDate = reader.AddedDate;
+            viewModel.Id = authorId;
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public IActionResult EditAuthor(AuthorViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+
+                return View(viewModel);
+            }
+
+            var authorId = viewModel.Id;
+
+
+            var dataAuthor = new AuthorData
+            {
+                Name = viewModel.Name,
+                Surname = viewModel.Surname,
+                PhoneNumber = viewModel.PhoneNumber,
+                AddedDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+
+
+            _authorRepository.Update(dataAuthor, authorId);
+
+
+
+            return RedirectToAction("Index");
+        }
     }
 }
