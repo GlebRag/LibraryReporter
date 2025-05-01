@@ -1,0 +1,105 @@
+﻿@model LibraryReporter.Models.Book.IssueBookViewModel
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выдача книги</title>
+    <style>
+
+        .container {
+            margin-block: 45px;
+            max-width: 600px;
+            max-height: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .form-group label {
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                padding: 8px;
+                font-size: 16px;
+            }
+
+            .form-group img {
+                max-width: 100%;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .submit-btn:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body class="creationbook">
+    <div class="container">
+
+        <form action="/Book/IssueBook" method="post">
+            <div class="form-group">
+                <label for="title">Название книги:</label>
+                <div id="@Model.BookName" name="BookName">@Model.BookName</div>
+                <input type="hidden" id="@Model.BookName" name="BookName" value="@Model.BookName">
+                @Html.ValidationMessageFor(x => x.BookName)
+            </div>
+            <div class="form-group">
+                <label for="title">Автор:</label>
+                <div id="@Model.Author" name="Author">@Model.Author</div>
+                <input type="hidden" id="@Model.Author" name="Author" value="@Model.Author">
+                @Html.ValidationMessageFor(x => x.Author)
+            </div>
+            <div class="form-group">
+                <label for="title">Издатель:</label>
+                <div id="@Model.Publisher" name="Publisher">@Model.Publisher</div>
+                <input type="hidden" id="@Model.Publisher" name="Publisher" value="@Model.Publisher">
+                @Html.ValidationMessageFor(x => x.Publisher)
+            </div>
+            <div class="form-group">
+                <label for="publisher">Читатель:</label>
+                <select id="@Model.Reader" name="Reader">
+                    @foreach (var readers in Model.Readers)
+                    {
+                        <option value="@readers.Id">@readers.Surname</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="bookDates">Срок выдачи книги:</label>
+                <p>
+                    С <strong>@Model.IssueDate.ToString("yyyy-MM-dd")</strong> по
+                    <strong>
+                        <input type="date" id="acceptanceLastDate" name="AcceptanceLastDate" value="@Model.AcceptanceLastDate.ToString("yyyy-MM-dd")">
+                    </strong>
+                </p>
+            </div>
+            <input type="hidden" id="@Model.IssueDate" name="IssueDate" value="@Model.IssueDate">
+            <input type="hidden" id="@Model.Id" name="Id" value="@Model.Id">
+            <button type="submit" class="submit-btn">Выдать книгу</button>
+        </form>
+    </div>
+
+</body>
+
+

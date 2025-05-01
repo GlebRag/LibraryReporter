@@ -56,33 +56,54 @@
 </head>
 <body class="creationbook">
     <div class="container">
-
         <form action="/Book/CreateBook" method="post">
             <div class="form-group">
                 <label for="title">Название книги:</label>
-                <input type="text" id="@Model.BookName" name="BookName" placeholder="Введите название книги">
+                <input type="text" id="BookName" name="BookName" placeholder="Введите название книги">
                 @Html.ValidationMessageFor(x => x.BookName)
             </div>
             <div class="form-group">
                 <label for="author">Автор:</label>
                 <select name="Author">
-                    @foreach (var authors in Model.Authors)
+                    @foreach (var author in Model.Authors)
                     {
-                        <option value="@authors.Surname">@authors.Surname</option>
+                        <option value="@author.Surname">
+                            @author.Surname
+                        </option>
                     }
                 </select>
+                <!-- Ссылка для открытия окна создания нового автора -->
+                <a href="/Author/CreateAuthor" onclick="openAuthorPopup(this.href); return false;" class="popup-link">
+                    Добавить нового автора
+                </a>
             </div>
             <div class="form-group">
                 <label for="publisher">Издатель:</label>
-                <select id="@Model.BookName" name="Publisher">
-                    @foreach (var publishers in Model.Publishers)
+                <select name="Publisher">
+                    @foreach (var publisher in Model.Publishers)
                     {
-                        <option value="@publishers.Name">@publishers.Name</option>
+                        <option value="@publisher.Name">
+                            @publisher.Name
+                        </option>
                     }
                 </select>
+                <!-- Аналогично для издателя -->
+                <a href="/Publisher/CreatePublisher" onclick="openPublisherPopup(this.href); return false;" class="popup-link">
+                    Добавить нового издателя
+                </a>
             </div>
-            <button type="submit" class="submit-btn">Добавить книгу</button>
+            <button type="submit" id="submitBtn" class="submit-btn">Добавить книгу</button>
         </form>
     </div>
+
+    <script>
+        // Функция открывает popup без использования rel="noopener", чтобы window.opener был доступен
+        function openAuthorPopup(url) {
+            window.open(url, '_blank', 'width=1000,height=1000,resizable=yes');
+        }
+        function openPublisherPopup(url) {
+            window.open(url, '_blank', 'width=1000,height=1000,resizable=yes');
+        }
+    </script>
 
 </body>

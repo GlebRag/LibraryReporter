@@ -1,0 +1,40 @@
+﻿@model LibraryReporter.Models.Publisher.PublisherCreationViewModel
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Издатель создан</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .message {
+            margin-top: 40px;
+            font-size: 18px;
+        }
+    </style>
+    <script>
+        function closeAndRefreshParent() {
+            // Если окно было открыто popup-ом, обновляем исходную страницу и закрываем окно
+            if (window.opener && !window.opener.closed) {
+                window.opener.location.reload();
+                window.close();
+            } else {
+                // Иначе можно отправить сообщение
+                window.location.href = "/Publisher/Index";
+            }
+        }
+        // Запускаем функцию сразу при загрузке
+        window.onload = closeAndRefreshParent;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Автор успешно создан!</h2>
+        <p class="message">Пожалуйста, подождите...</p>
+    </div>
+</body>
+</html>

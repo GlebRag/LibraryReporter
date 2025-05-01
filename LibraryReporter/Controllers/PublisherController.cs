@@ -98,7 +98,9 @@ namespace LibraryReporter.Controllers
             _publisherRepository.Create(dataPublisher);
 
 
-            return RedirectToAction("Index");
+            viewModel.Success = true;
+
+            return View("PublisherCreated", viewModel);
         }
 
         [IsAuthenticated]

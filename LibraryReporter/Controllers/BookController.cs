@@ -8,6 +8,10 @@ using LibraryReporter.Models.Book;
 using LibraryReporter.Data.Models;
 using LibraryReporter.Data.Interfaces.Repositories;
 using LibraryReporter.Controllers.AuthAttributes;
+using LibraryReporter.Models.Reader;
+using Library.Data.Models;
+using Library.Data.Repositories;
+using System.Net;
 
 namespace LibraryReporter.Controllers
 {
@@ -16,6 +20,8 @@ namespace LibraryReporter.Controllers
         private readonly ILogger<BookController> _logger;
         private AuthService _authService;
         private IBookRepositoryReal _bookRepository;
+        private IIssuedBookRepositoryReal _issuedBookRepository;
+        private IReaderRepositoryReal _readerRepository;
         private IAuthorRepositoryReal _authorRepository;
         private IPublisherRepositoryReal _publisherRepository;
         private IUserRepositryReal _userRepositryReal;
@@ -25,12 +31,16 @@ namespace LibraryReporter.Controllers
         public BookController(ILogger<BookController> logger,
             IBookRepositoryReal bookRepository,
             IAuthorRepositoryReal authorRepository,
+            IIssuedBookRepositoryReal issuedBookRepository,
+            IReaderRepositoryReal readerRepository,
             IPublisherRepositoryReal publisherRepository,
             WebDbContext webDbContext,
             IUserRepositryReal userRepositryReal,
             AuthService authService,
             IWebHostEnvironment webHostEnvironment)
         {
+            _issuedBookRepository = issuedBookRepository;
+            _readerRepository = readerRepository;
             _publisherRepository = publisherRepository;
             _authorRepository = authorRepository;
             _bookRepository = bookRepository;
@@ -257,5 +267,156 @@ namespace LibraryReporter.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public IActionResult IssueBook(int bookId)
+        {
+            var readersViewModels = _readerRepository
+                .GetAll()
+                .Select(x => new ReaderSurnameAndIdViewModel
+                {
+                    Id = x.Id,
+                    Surname = x.Surname
+                })
+                .ToList();
+
+            var viewModel = new IssueBookViewModel()
+            {
+                Readers = readersViewModels
+            };
+
+            var book = _webDbContext.Books.First(x => x.Id == bookId);
+            viewModel.BookName = book.BookName;
+            viewModel.Author = book.Author;
+            viewModel.Publisher = book.Publisher;
+            viewModel.IssueDate = DateOnly.FromDateTime(DateTime.Now);
+            viewModel.AcceptanceLastDate = DateOnly.FromDateTime(DateTime.Now.AddDays(14));
+            viewModel.Id = bookId;
+
+            return View(viewModel);
+        }
+        [IsAuthenticated]
+        [HttpPost]
+        public IActionResult IssueBook(IssueBookViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+
+                var readersViewModels = _readerRepository
+                .GetAll()
+                .Select(x => new ReaderSurnameAndIdViewModel
+                {
+                    Id = x.Id,
+                    Surname = x.Surname
+                })
+                .ToList();
+
+                viewModel.IssueDate = DateOnly.FromDateTime(DateTime.Now);
+                viewModel.AcceptanceLastDate = DateOnly.FromDateTime(DateTime.Now.AddDays(14));
+
+                viewModel.Readers = readersViewModels;
+                
+
+                return View(viewModel);
+            }
+
+            var bookId = viewModel.Id;
+
+            var moderId = _authService.GetUserId();
+
+            var dataIssueBook = new IssuedBookData
+            {
+                ModerId = (int)moderId!,
+                BookId = bookId,
+                ReaderId = viewModel.Reader,
+                IssueDate = viewModel.IssueDate,
+                AcceptanceLastDate = viewModel.AcceptanceLastDate
+            };
+
+
+            _issuedBookRepository.IssueBook(dataIssueBook, bookId);
+
+
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult AcceptanceBook(int bookId)
+        {
+            var issueBook = _webDbContext.IssuedBooks.First(x => x.BookId == bookId);
+            var readerId = issueBook.ReaderId;
+            var readerSurname = _webDbContext.Readers.First(x => x.Id == readerId).Surname;
+
+            var viewModel = new AcceptanceBookViewModel();
+
+            var book = _webDbContext.Books.First(x => x.Id == bookId);
+            viewModel.BookName = book.BookName;
+            viewModel.Author = book.Author;
+            viewModel.Publisher = book.Publisher;
+            viewModel.AcceptanceDate = DateOnly.FromDateTime(DateTime.Now);
+            viewModel.Reader = readerSurname;
+            viewModel.Id = bookId;
+
+            return View(viewModel);
+        }
+
+        [IsAuthenticated]
+        [HttpPost]
+        public IActionResult AcceptanceBook(AcceptanceBookViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+
+                return View(viewModel);
+            }
+
+            var bookId = viewModel.Id;
+
+
+            _issuedBookRepository.AcceptanceBook(bookId);
+
+
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult ValidateBarcode([FromBody] BarcodeCheckModel model)
+        {
+            if (model == null)
+            {
+                return Json(new { match = false, message = "Получены пустые данные!" });
+            }
+
+            // Ищем книгу по идентификатору
+            var book = _webDbContext.Books.FirstOrDefault(x => x.Id == model.BookId);
+            if (book == null)
+            {
+                return Json(new { match = false, message = "Книга не найдена!" });
+            }
+
+            // Сравниваем штрихкоды с учетом удаления начальных и конечных пробелов
+            bool isMatch = book.Barcode.Trim() == model.BookBarcode.Trim();
+
+            return Json(new
+            {
+                match = isMatch,
+                message = isMatch ? "Штрихкод подтвержден!" : "Ошибка: штрихкоды не совпадают!",
+                BookId = book.Id,
+                BookBarcode = book.Barcode.Trim() // возвращаем штрихкод без лишних пробелов
+            });
+        }
+
+
+
+        public class BarcodeCheckModel
+        {
+            public string BookBarcode { get; set; }
+            public int BookId { get; set; }
+        }
+
+
+
     }
 }

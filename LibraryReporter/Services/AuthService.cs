@@ -74,5 +74,10 @@ namespace LibraryReporter.Services
                .FirstOrDefault(x => x.Type == type)
                ?.Value;
         }
+
+        internal string GetNameById(int moderId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

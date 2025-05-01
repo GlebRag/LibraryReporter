@@ -56,25 +56,33 @@
 </head>
 <body class="creationbook">
     <div class="container">
-
-        <form action="/Publisher/CreatePublisher" method="post">
-            <div class="form-group">
-                <label for="title">Имя:</label>
-                <input type="text" id="@Model.Name" name="Name" placeholder="Введите имя автора">
-                @Html.ValidationMessageFor(x => x.Name)
-            </div>
-            <div class="form-group">
-                <label for="title">Город:</label>
-                <input type="text" id="@Model.City" name="City" placeholder="Введите город">
-                @Html.ValidationMessageFor(x => x.City)
-            </div>
-            <div class="form-group">
-                <label for="title">Эл. Почта:</label>
-                <input type="text" id="@Model.Email" name="Email" placeholder="Введите эл. почту">
-                @Html.ValidationMessageFor(x => x.Email)
-            </div>
-            <button type="submit" class="submit-btn">Добавить издателя</button>
-        </form>
+        @if (Model.Success)
+        {
+            <!-- Если автор успешно создан -->
+            <h2>Издатель успешно создан!</h2>
+            <p>Подождите, идет обновление исходной страницы...</p>
+        }
+        else
+        {
+            <form action="/Publisher/CreatePublisher" method="post">
+                <div class="form-group">
+                    <label for="title">Имя:</label>
+                    <input type="text" id="@Model.Name" name="Name" placeholder="Введите имя автора">
+                    @Html.ValidationMessageFor(x => x.Name)
+                </div>
+                <div class="form-group">
+                    <label for="title">Город:</label>
+                    <input type="text" id="@Model.City" name="City" placeholder="Введите город">
+                    @Html.ValidationMessageFor(x => x.City)
+                </div>
+                <div class="form-group">
+                    <label for="title">Эл. Почта:</label>
+                    <input type="text" id="@Model.Email" name="Email" placeholder="Введите эл. почту">
+                    @Html.ValidationMessageFor(x => x.Email)
+                </div>
+                <button type="submit" class="submit-btn">Добавить издателя</button>
+            </form>
+        }
     </div>
 
 </body>

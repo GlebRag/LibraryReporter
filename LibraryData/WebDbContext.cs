@@ -17,6 +17,8 @@ namespace LibraryReporter.Data
         public DbSet<AuthorData> Authors { get; set; }
         public DbSet<PublisherData> Publishers { get; set; }
 
+        public DbSet<IssuedBookData> IssuedBooks { get; set; }
+
 
         public WebDbContext() { }
 

@@ -7,6 +7,6 @@
 
         public string PhoneNumber { get; set; }
 
-
+        public bool Success { get; set; }
     }
 }

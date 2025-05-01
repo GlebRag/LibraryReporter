@@ -15,6 +15,7 @@ using System.IO;
 using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Net;
+using Library.Data.Models;
 
 namespace LibraryReporter.Data.Repositories
 {
@@ -84,6 +85,9 @@ namespace LibraryReporter.Data.Repositories
         {
             Add(dataBook);
         }
+
+
+
 
         ////public IEnumerable<BookData> GetBook(int userId)
         ////{

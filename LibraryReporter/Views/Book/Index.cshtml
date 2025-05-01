@@ -30,6 +30,7 @@
                 } *@
                 @if (authService.IsLibraryModerator())
                 {
+                    <th>Выдать/принять книгу</th>
                     <th>Изменить</th>
                     <th>Удалить</th>
                 }
@@ -61,7 +62,33 @@
                     @if (authService.IsLibraryModerator())
                     {
                         <td>
-                            <a href="/Book/EditBook?bookId=@book.Id" class="action-icon ">
+                            @{
+                                try
+                                {
+                                    var bookStatus = StatusHelper.GetStatusEnum(book.Status); // Преобразуем строку в enum
+
+                                    if (bookStatus.HasFlag(Enums.Status.Status.InLibrary))
+                                    {
+                                        <a href="/Book/IssueBook?bookId=@book.Id" class="action-icon">
+                                            <img src="/images/issue-icon.png" alt="Выдать книгу" />
+                                        </a>
+                                    }
+
+                                    if (bookStatus.HasFlag(Enums.Status.Status.InArmas))
+                                    {
+                                        <a href="/Book/AcceptanceBook?bookId=@book.Id" class="action-icon">
+                                            <img src="/images/acceptance-icon.png" alt="Принять книгу" />
+                                        </a>
+                                    }
+                                }
+                                catch (ArgumentException)
+                                {
+                                    <p style="color: red;">Ошибка: неизвестный статус книги!</p>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <a href="/Book/EditBook?bookId=@book.Id" class="action-icon">
                                 <img src="/images/edit-icon.png" alt="Изменить" />
                             </a>
                         </td>
@@ -71,6 +98,7 @@
                             </a>
                         </td>
                     }
+
                 </tr>
             }
         </tbody>

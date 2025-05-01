@@ -1,3 +1,4 @@
+using Library.Data.Repositories;
 using LibraryReporter.Data;
 using LibraryReporter.Data.Repositories;
 using LibraryReporter.Services;
@@ -23,6 +24,7 @@ builder.Services.AddScoped<IBookRepositoryReal, BookRepository>();
 builder.Services.AddScoped<IReaderRepositoryReal, ReaderRepository>();
 builder.Services.AddScoped<IAuthorRepositoryReal, AuthorRepository>();
 builder.Services.AddScoped<IPublisherRepositoryReal, PublisherRepository>();
+builder.Services.AddScoped<IIssuedBookRepositoryReal, IssuedBookRepository>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EnumHelper>();
