@@ -84,6 +84,9 @@
                         <option value="@readers.Id">@readers.Surname</option>
                     }
                 </select>
+                <a href="/Reader/CreateReader" onclick="openPublisherPopup(this.href); return false;" class="popup-link">
+                    Добавить нового читателя
+                </a>
             </div>
             <div class="form-group">
                 <label for="bookDates">Срок выдачи книги:</label>
@@ -99,6 +102,16 @@
             <button type="submit" class="submit-btn">Выдать книгу</button>
         </form>
     </div>
+
+    <script>
+        // Функция открывает popup без использования rel="noopener", чтобы window.opener был доступен
+        function openAuthorPopup(url) {
+            window.open(url, '_blank', 'width=1000,height=1000,resizable=yes');
+        }
+        function openPublisherPopup(url) {
+            window.open(url, '_blank', 'width=1000,height=1000,resizable=yes');
+        }
+    </script>
 
 </body>
 

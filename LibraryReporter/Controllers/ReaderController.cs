@@ -99,7 +99,9 @@ namespace LibraryReporter.Controllers
             _readerRepository.Create(dataReader);
 
 
-            return RedirectToAction("Index");
+            viewModel.Success = true;
+
+            return View("ReaderCreated", viewModel);
         }
 
         [IsAuthenticated]

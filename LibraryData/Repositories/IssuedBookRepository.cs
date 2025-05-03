@@ -4,11 +4,14 @@ using LibraryReporter.Data;
 using LibraryReporter.Data.Interfaces.Repositories;
 using LibraryReporter.Data.Models;
 using LibraryReporter.Data.Repositories;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Library.Data.Repositories
 {
@@ -19,7 +22,7 @@ namespace Library.Data.Repositories
         //void BuyBook(BookData dataBook, int userId);
         //void Create(BookData dataBook);
         void IssueBook(IssuedBookData dataIssueBook, int bookId);
-        //IEnumerable<BookData> SearchBook(string name, string author, string publisher, string barcode);
+        IEnumerable<IssuedBookData> SearchIssuedBooks(DateOnly issueDate, DateOnly acceptanceLastDate);
         ////IEnumerable<BookData> GetBook(int userId);
         //void QuantityCounting(int bookId);
         //bool IsThisUserBoughtThisBook(int bookId, int userId);
@@ -52,5 +55,41 @@ namespace Library.Data.Repositories
             book.Status = Enums.Status.Status.InArmas;
             _webDbContext.SaveChanges();
         }
+
+        public IEnumerable<IssuedBookData> SearchIssuedBooks(DateOnly issueDate, DateOnly acceptanceLastDate)
+        {
+            var parameters = new List<SqlParameter>();
+            var sql = new StringBuilder("SELECT * FROM dbo.IssuedBooks WHERE 1=1");
+
+            if (issueDate != DateOnly.MinValue && acceptanceLastDate != DateOnly.MinValue)
+            {
+                sql.Append(" AND issueDate BETWEEN @IssueDate AND @AcceptanceLastDate");
+                parameters.Add(new SqlParameter("@IssueDate", issueDate));
+                parameters.Add(new SqlParameter("@AcceptanceLastDate", acceptanceLastDate));
+            }
+            else if (issueDate != DateOnly.MinValue)
+            {
+                sql.Append(" AND issueDate >= @IssueDate");
+                parameters.Add(new SqlParameter("@IssueDate", issueDate));
+            }
+            else if (acceptanceLastDate != DateOnly.MinValue)
+            {
+                sql.Append(" AND issueDate <= @AcceptanceLastDate");
+                parameters.Add(new SqlParameter("@AcceptanceLastDate", acceptanceLastDate));
+            }
+            else
+            {
+                sql.Append(" AND issueDate IS NOT NULL");
+            }
+
+            var result = _webDbContext
+                .Database
+                .SqlQueryRaw<IssuedBookData>(sql.ToString(), parameters.ToArray())
+                .ToList();
+
+            return result;
+        }
+
+
     }
 }

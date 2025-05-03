@@ -9,6 +9,8 @@
 
         public DateOnly Birtday { get; set; }
 
+        public bool Success { get; set; }
+
 
     }
 }

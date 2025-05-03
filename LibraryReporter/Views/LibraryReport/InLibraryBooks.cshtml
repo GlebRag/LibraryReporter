@@ -1,6 +1,6 @@
 ﻿@using LibraryReporter.Models.LibraryReport
 @using LibraryReporter.Services
-@model List<IssuedBookReportViewModel>
+@model List<InLibraryBookReportViewModel>
 @inject AuthService authService
 @inject UserService userService
 
@@ -8,10 +8,11 @@
 <div class="tableBody">
 
     <div class="search-section">
-        <form method="post" action="/LibraryReport/SearchIssueBookReport" class="search-form">
+        <form method="post" action="/LibraryReport/SearchInLibraryBookReport" class="search-form">
+            <input type="text" name="name" placeholder="Введите название книги" class="search-input" id="BookName" />
+            <input type="text" name="author" placeholder="Введите автора книги" class="search-input" id="Author" />
+            <input type="text" name="publisher" placeholder="Введите издателя" class="search-input" id="Publisher" />
             <input type="text" name="barcode" placeholder="Введите штрихкод" class="search-input" id="Barcode" />
-            <input type="date" name="issueDate" placeholder="Введите дату выдачи" class="search-input" id="IssueDate" />
-            <input type="date" name="acceptanceLastDate" placeholder="Введите дату возврата" class="search-input" id="AcceptanceLastDate" />
             <button type="submit" class="search-button">Найти</button>
         </form>
     </div>
@@ -21,29 +22,20 @@
     <table class="tableBook">
         <thead>
             <tr>
-                <th>Фамилия сотрудника</th>
-                <th>Фамилия читателя</th>
                 <th>Название книги</th>
                 <th>Автор</th>
                 <th>Издатель</th>
                 <th>Штрихкод</th>
-                <th>Дата выдачи</th>
-                <th>Дата возврата</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var book in Model)
             {
                 <tr>
-                    <td>@book.ModerSurname</td>
-                    <td>@book.ReaderSurname</td>
                     <td>@book.BookName</td>
                     <td>@book.Author</td>
                     <td>@book.Publisher</td>
                     <td>@book.Barcode</td>
-                    <td>@book.IssueDate</td>
-                    <td>@book.AcceptanceLastDate</td>
-
                 </tr>
             }
         </tbody>
@@ -65,7 +57,7 @@
         const data = @Html.Raw(Json.Serialize(Model));
 
         // Отправляем запрос на сервер
-        fetch('/LibraryReport/CreateReportForIssuedBooks', {
+        fetch('/LibraryReport/CreateReportForInLibraryBooks', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -78,7 +70,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `Отчет_Выданные_Книги_${formattedDate}.docx`; // Добавляем дату в название файла
+                a.download = `Отчет_Книги_В_Библиотеке_${formattedDate}.docx`; // Добавляем дату в название файла
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -86,4 +78,3 @@
             .catch(error => console.error('Ошибка при создании отчета:', error));
     }
 </script>
-
