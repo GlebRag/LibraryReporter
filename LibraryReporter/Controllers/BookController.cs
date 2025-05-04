@@ -21,6 +21,7 @@ namespace LibraryReporter.Controllers
         private AuthService _authService;
         private IBookRepositoryReal _bookRepository;
         private IIssuedBookRepositoryReal _issuedBookRepository;
+        private IActionsHistoryRepositoryReal _actionsHistoryRepository;
         private IReaderRepositoryReal _readerRepository;
         private IAuthorRepositoryReal _authorRepository;
         private IPublisherRepositoryReal _publisherRepository;
@@ -31,6 +32,7 @@ namespace LibraryReporter.Controllers
         public BookController(ILogger<BookController> logger,
             IBookRepositoryReal bookRepository,
             IAuthorRepositoryReal authorRepository,
+            IActionsHistoryRepositoryReal actionsHistoryRepository,
             IIssuedBookRepositoryReal issuedBookRepository,
             IReaderRepositoryReal readerRepository,
             IPublisherRepositoryReal publisherRepository,
@@ -39,6 +41,7 @@ namespace LibraryReporter.Controllers
             AuthService authService,
             IWebHostEnvironment webHostEnvironment)
         {
+            _actionsHistoryRepository = actionsHistoryRepository;
             _issuedBookRepository = issuedBookRepository;
             _readerRepository = readerRepository;
             _publisherRepository = publisherRepository;
@@ -120,7 +123,7 @@ namespace LibraryReporter.Controllers
             {
                 return View(viewModel);
             }
-
+            
             var dataBook = new BookData
             {
                 BookName = viewModel.BookName,
@@ -132,6 +135,11 @@ namespace LibraryReporter.Controllers
 
             _bookRepository.Create(dataBook);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Create);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .CreateBook(Enums.Action.Actions.Create, actionDescription, viewModel.BookName, dataBook.Barcode, moderName);
+            
             return RedirectToAction("Index");
         }
 

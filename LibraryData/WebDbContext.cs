@@ -16,8 +16,8 @@ namespace LibraryReporter.Data
         public DbSet<Library.Data.Models.ReaderData> Readers { get; set; }
         public DbSet<AuthorData> Authors { get; set; }
         public DbSet<PublisherData> Publishers { get; set; }
-
         public DbSet<IssuedBookData> IssuedBooks { get; set; }
+        public DbSet<ActionsHistoryData> ActionHistory { get; set; }
 
 
         public WebDbContext() { }

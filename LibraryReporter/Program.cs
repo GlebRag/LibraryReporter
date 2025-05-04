@@ -25,10 +25,12 @@ builder.Services.AddScoped<IReaderRepositoryReal, ReaderRepository>();
 builder.Services.AddScoped<IAuthorRepositoryReal, AuthorRepository>();
 builder.Services.AddScoped<IPublisherRepositoryReal, PublisherRepository>();
 builder.Services.AddScoped<IIssuedBookRepositoryReal, IssuedBookRepository>();
+builder.Services.AddScoped<IActionsHistoryRepositoryReal, ActionsHistoryRepository>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EnumHelper>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ActionsHelper>();
 
 builder.Services.AddHttpContextAccessor();
 
