@@ -12,6 +12,7 @@ using LibraryReporter.Models.Reader;
 using Library.Data.Models;
 using Library.Data.Repositories;
 using System.Net;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace LibraryReporter.Controllers
 {
@@ -353,7 +354,15 @@ namespace LibraryReporter.Controllers
 
             _issuedBookRepository.IssueBook(dataIssueBook, bookId);
 
-
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Issue);
+            var moderName = _authService.GetName();
+            var readerName = _readerRepository.Get(viewModel.Reader)?.Name;
+            var readerSurname = _readerRepository.Get(viewModel.Reader)?.Surname;
+            var barcode = _bookRepository.Get(bookId)?.Barcode;
+            var author = _bookRepository.Get(bookId)?.Author;
+            var publisher = _bookRepository.Get(bookId)?.Publisher;
+            _actionsHistoryRepository
+                .IssueBook(Enums.Action.Actions.Issue, actionDescription, readerName, readerSurname, viewModel.BookName, barcode, author, publisher, viewModel.IssueDate, viewModel.AcceptanceLastDate, moderName);
 
             return RedirectToAction("Index");
         }
@@ -390,9 +399,19 @@ namespace LibraryReporter.Controllers
 
             var bookId = viewModel.Id;
 
+            var issuedBookReaderId = _webDbContext.IssuedBooks.First(x => x.BookId == bookId).ReaderId;
 
             _issuedBookRepository.AcceptanceBook(bookId);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Acceptance);
+            var moderName = _authService.GetName();
+            var readerName = _readerRepository.Get(issuedBookReaderId)?.Name;
+            var readerSurname = viewModel.Reader;
+            var barcode = _bookRepository.Get(bookId)?.Barcode;
+            var author = _bookRepository.Get(bookId)?.Author;
+            var publisher = _bookRepository.Get(bookId)?.Publisher;
+            _actionsHistoryRepository
+                .AcceptanceBook(Enums.Action.Actions.Acceptance, actionDescription, readerName, readerSurname, viewModel.BookName, barcode, author, publisher, moderName);
 
 
             return RedirectToAction("Index");

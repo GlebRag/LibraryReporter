@@ -1,0 +1,89 @@
+﻿@using LibraryReporter.Models.LibraryReport
+@using LibraryReporter.Services
+@model List<ActionsReportViewModel>
+@inject AuthService authService
+@inject UserService userService
+
+
+<div class="tableBody">
+
+    <div class="search-section">
+        <form method="post" action="/LibraryReport/SearchActionsReport" class="search-form">
+            <select name="action" class="search-input" id="Action">
+                <option value="Delete">Удаление</option>
+                <option value="Create">Создание</option>
+                <option value="Edit">Редактирование</option>
+                <option value="Issue">Выдача</option>
+                <option value="Acceptance">Принятие</option>
+            </select>
+            <input type="date" name="dateFrom" placeholder="Введите начальную дату" class="search-input" id="DateFrom" />
+            <input type="date" name="dateTo" placeholder="Введите конечную дату" class="search-input" id="DateTo" />
+            <button type="submit" class="search-button">Найти</button>
+            <button type="button" class="search-button" onclick="window.location.href='/LibraryReport/ActionsHistory'">Сбросить</button>
+        </form>
+    </div>
+
+    <div class="creation-order">
+        <a class="text-neutral-950 hover:text-orange-500 py-2 px-4 rounded-md bg-orange-200" onclick="createReport()">Создать отчет</a>
+    </div>
+    <table class="tableBook">
+        <thead>
+            <tr>
+                <th>Фамилия сотрудника</th>
+                <th>Событие</th>
+                <th>Описание</th>
+                <th>Дата исполнения</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var action in Model)
+            {
+                <tr>
+                    <td>@action.ModerSurname</td>
+                    <td>@action.Action</td>
+                    <td>@action.Description</td>
+                    <td>@action.ExecutionDate</td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function createReport() {
+        // Получаем текущую дату
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).replace(/\./g, '-'); // Форматируем дату в формате "20-04-2025"
+
+        // Получаем ViewModel из Razor в формате JSON
+        const data = @Html.Raw(Json.Serialize(Model));
+
+        // Отправляем запрос на сервер
+        fetch('/LibraryReport/CreateReportForActions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `Отчет_Работы_Книжного_Фонда_${formattedDate}.docx`; // Добавляем дату в название файла
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Ошибка при создании отчета:', error));
+    }
+</script>
+

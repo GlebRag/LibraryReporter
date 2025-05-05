@@ -17,6 +17,8 @@ using System.Xml.Linq;
 using System.Net;
 using Library.Data.Models;
 using Enums.Action;
+using static Azure.Core.HttpHeader;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LibraryReporter.Data.Repositories
 {
@@ -37,6 +39,12 @@ namespace LibraryReporter.Data.Repositories
         void DeleteReader(Enums.Action.Actions action, string actionDescription, string moder);
         void DeleteAuthor(Enums.Action.Actions action, string actionDescription, string moder);
         void DeletePublisher(Enums.Action.Actions action, string actionDescription, string moder);
+
+        void IssueBook(Actions action, string actionDescription, string ReaderName, string ReaderSurname, string BookName, string Barcode, string Author, string Publisher, DateOnly IssueDate, DateOnly AcceptanceLastDate, string moder);
+        void AcceptanceBook(Actions action, string actionDescription, string ReaderName, string ReaderSurname, string BookName, string Barcode, string Author, string Publisher,string moder);
+
+        IEnumerable<ActionsHistoryData> SearchAction(Actions action, DateOnly dateFrom, DateOnly dateTo);
+        
     }
 
     public class ActionsHistoryRepository : BaseRepository<ActionsHistoryData>, IActionsHistoryRepositoryReal
@@ -195,6 +203,76 @@ namespace LibraryReporter.Data.Repositories
                 ExecutionDate = DateOnly.FromDateTime(DateTime.Now)
             };
             Add(dataHistory);
+        }
+
+
+
+        public void IssueBook(Actions action, string actionDescription, string ReaderName, string ReaderSurname, string BookName, string Barcode, string Author, string Publisher, DateOnly IssueDate, DateOnly AcceptanceLastDate, string moder)
+        {
+            var dataHistory = new ActionsHistoryData
+            {
+                ModerSurname = moder,
+                Actions = action,
+                Description = $"{actionDescription} книгу читателю: {ReaderName} {ReaderSurname}. Название: {BookName} Штрихкод: {Barcode} Автор: {Author} Издатель: {Publisher}. Книга выдана с {IssueDate} по {AcceptanceLastDate}",
+                ExecutionDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+            Add(dataHistory);
+        }
+
+        public void AcceptanceBook(Actions action, string actionDescription, string ReaderName, string ReaderSurname, string BookName, string Barcode, string Author, string Publisher, string moder)
+        {
+            var dataHistory = new ActionsHistoryData
+            {
+                ModerSurname = moder,
+                Actions = action,
+                Description = $"{actionDescription} книгу у читателя: {ReaderName} {ReaderSurname}. Название: {BookName} Штрихкод: {Barcode} Автор: {Author} Издатель: {Publisher}.",
+                ExecutionDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+            Add(dataHistory);
+        }
+
+
+
+        public IEnumerable<ActionsHistoryData> SearchAction(Actions action, DateOnly dateFrom, DateOnly dateTo)
+        {
+            var parameters = new List<SqlParameter>();
+            var sql = new StringBuilder("SELECT * FROM dbo.ActionHistory WHERE 1=1"); //Это условие всгеда истинно
+
+            sql.Append(" AND Actions = @Actions");
+            parameters.Add(new SqlParameter("@Actions", action));
+         
+            if (dateFrom != DateOnly.MinValue && dateTo != DateOnly.MinValue)
+            {
+                // Если есть оба значения: диапазон между DateFrom и DateTo
+                sql.Append(" AND CAST(ExecutionDate AS DATE) BETWEEN @DateFrom AND @DateTo");
+                parameters.Add(new SqlParameter("@DateFrom", dateFrom));
+                parameters.Add(new SqlParameter("@DateTo", dateTo));
+            }
+            else if (dateFrom != DateOnly.MinValue)
+            {
+                // Если только DateFrom: данные от DateFrom до сегодняшнего дня
+                sql.Append(" AND CAST(ExecutionDate AS DATE) >= @DateFrom");
+                parameters.Add(new SqlParameter("@DateFrom", dateFrom));
+            }
+            else if (dateTo != DateOnly.MinValue)
+            {
+                // Если только DateTo: данные с начала до DateTo
+                sql.Append(" AND CAST(ExecutionDate AS DATE) <= @DateTo");
+                parameters.Add(new SqlParameter("@DateTo", dateTo));
+            }
+            else
+            {
+                // Если нет значений, вы можете либо ничего не делать, либо использовать данные до сегодняшнего дня
+                sql.Append(" AND CAST(ExecutionDate AS DATE) <= @CurrentDate");
+                parameters.Add(new SqlParameter("@CurrentDate", DateTime.Now.Date));
+            }
+
+            var result = _webDbContext
+                .Database
+                .SqlQueryRaw<ActionsHistoryData>(sql.ToString(), parameters.ToArray())
+                .ToList();
+
+            return result;
         }
     }
 }

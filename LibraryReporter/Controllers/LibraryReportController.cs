@@ -15,6 +15,8 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
+using Enums.Action;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace LibraryReporter.Controllers
 {
@@ -24,6 +26,7 @@ namespace LibraryReporter.Controllers
         private AuthService _authService;
         private IBookRepositoryReal _bookRepository;
         private IIssuedBookRepositoryReal _issuedBookRepository;
+        private IActionsHistoryRepositoryReal _actionsHistoryRepository;
         private IReaderRepositoryReal _readerRepository;
         private IAuthorRepositoryReal _authorRepository;
         private IPublisherRepositoryReal _publisherRepository;
@@ -33,6 +36,7 @@ namespace LibraryReporter.Controllers
 
         public LibraryReportController(ILogger<LibraryReportController> logger,
             IBookRepositoryReal bookRepository,
+            IActionsHistoryRepositoryReal actionsHistoryRepository,
             IAuthorRepositoryReal authorRepository,
             IIssuedBookRepositoryReal issuedBookRepository,
             IReaderRepositoryReal readerRepository,
@@ -43,6 +47,7 @@ namespace LibraryReporter.Controllers
             IWebHostEnvironment webHostEnvironment)
         {
             _issuedBookRepository = issuedBookRepository;
+            _actionsHistoryRepository = actionsHistoryRepository;
             _readerRepository = readerRepository;
             _publisherRepository = publisherRepository;
             _authorRepository = authorRepository;
@@ -151,6 +156,46 @@ namespace LibraryReporter.Controllers
             return View("InLibraryBooks", viewModels);
         }
 
+
+
+        public IActionResult ActionsHistory()
+        {
+            var actions = _actionsHistoryRepository.GetAll()
+                .ToList();
+
+            var actionsViewModels = actions
+                .Select(dbActions =>
+                    new ActionsReportViewModel
+                    {
+                        ModerSurname = dbActions.ModerSurname,
+                        Action = ActionsHelper.GetActionDescription(dbActions.Actions),
+                        Description = dbActions.Description,
+                        ExecutionDate = dbActions.ExecutionDate
+                    }
+                )
+                .ToList();
+
+            return View(actionsViewModels);
+
+        }
+
+
+        public IActionResult SearchActionsReport(Actions action, DateOnly dateFrom, DateOnly dateTo)
+        {
+
+            var actionsViewModels = _actionsHistoryRepository
+                .SearchAction(action, dateFrom, dateTo)
+                .Select(dbActions => new ActionsReportViewModel
+                {
+                    ModerSurname = dbActions.ModerSurname,
+                    Action = ActionsHelper.GetActionDescription(dbActions.Actions),
+                    Description = dbActions.Description,
+                    ExecutionDate = dbActions.ExecutionDate
+                })
+                .ToList();
+
+            return View("ActionsHistory", actionsViewModels);
+        }
 
         [HttpPost]
         public IActionResult CreateReportForInLibraryBooks([FromBody] List<InLibraryBookReportViewModel> model)
@@ -377,6 +422,117 @@ namespace LibraryReporter.Controllers
                         new TableCell(new Paragraph(new Run(new Text(order.Barcode)))),
                         new TableCell(new Paragraph(new Run(new Text(order.IssueDate.ToString("dd.MM.yyyy"))))),
                         new TableCell(new Paragraph(new Run(new Text(order.AcceptanceLastDate.ToString("dd.MM.yyyy")))))
+                    );
+                    table.Append(row);
+                }
+
+                body.Append(table);
+
+                // Разделение перед подписью
+                body.Append(new Paragraph(new Run(new Text(""))));
+
+                // Подпись и дата
+                var footerTable = new Table();
+                footerTable.AppendChild(new TableRow(
+                    new TableCell(new Paragraph(new Run(new Text($"Отчет создан сотрудником: {_authService.GetName()} Подпись: ____________  ")))),
+                    new TableCell(new Paragraph(
+                        new ParagraphProperties(new Justification { Val = JustificationValues.Right }),
+                        new Run(new Text($" Дата: {DateTime.Now:dd.MM.yyyy}")))
+                    )
+                ));
+                body.Append(footerTable);
+
+                // Сохраняем документ
+                mainPart.Document.Save();
+            }
+
+            return File(System.IO.File.ReadAllBytes("Report.docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Report.docx");
+        }
+
+
+
+        [HttpPost]
+        public IActionResult CreateReportForActions([FromBody] List<ActionsReportViewModel> model)
+        {
+            // Проверяем, есть ли данные
+            if (model == null || !model.Any())
+            {
+                return BadRequest("Данные отсутствуют.");
+            }
+
+            // Находим минимальную и максимальную дату
+            var minDate = model.Min(m => m.ExecutionDate);
+            var maxDate = model.Max(m => m.ExecutionDate);
+
+
+            // Создаем документ Word
+            using (var wordDoc = WordprocessingDocument.Create("Report.docx", WordprocessingDocumentType.Document))
+            {
+                var mainPart = wordDoc.AddMainDocumentPart();
+                mainPart.Document = new Document();
+                var body = new Body();
+                mainPart.Document.Append(body);
+
+                // Заголовок "Отчет"
+                var titleParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text("Отчет")) { RunProperties = new RunProperties(new Bold()) }
+                );
+                body.Append(titleParagraph);
+
+                // Подзаголовок с датами
+                string dateSubtitleText;
+                if (minDate == maxDate)
+                {
+                    dateSubtitleText = $"Отчет работы книжного фонда за {minDate:dd.MM.yyyy}";
+                }
+                else
+                {
+                    dateSubtitleText = $"Отчет работы книжного фонда с {minDate:dd.MM.yyyy} по {maxDate:dd.MM.yyyy}";
+                }
+                var dateSubtitleParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text(dateSubtitleText))
+                );
+                body.Append(dateSubtitleParagraph);
+
+                // Разделение перед таблицей
+                body.Append(new Paragraph(new Run(new Text(""))));
+
+                // Добавляем таблицу
+                var table = new Table();
+                var tableProperties = new TableProperties(
+                    new TableWidth { Width = "100%", Type = TableWidthUnitValues.Pct },
+                    new TableBorders(
+                        new TopBorder { Val = BorderValues.Single, Size = 12 },
+                        new BottomBorder { Val = BorderValues.Single, Size = 12 },
+                        new LeftBorder { Val = BorderValues.Single, Size = 12 },
+                        new RightBorder { Val = BorderValues.Single, Size = 12 },
+                        new InsideHorizontalBorder { Val = BorderValues.Single, Size = 12 },
+                        new InsideVerticalBorder { Val = BorderValues.Single, Size = 12 }
+                    )
+                );
+                table.AppendChild(tableProperties);
+
+                // Добавляем заголовки таблицы
+                var headerRow = new TableRow();
+                headerRow.Append(
+                    new TableCell(new Paragraph(new Run(new Text("Фамилия сотрудника")))),
+                    new TableCell(new Paragraph(new Run(new Text("Событие")))),
+                    new TableCell(new Paragraph(new Run(new Text("Описание")))),
+                    new TableCell(new Paragraph(new Run(new Text("Дата исполнения"))))
+                );
+                table.Append(headerRow);
+
+                // Заполняем таблицу данными
+                foreach (var order in model)
+                {
+                    var row = new TableRow();
+                    row.Append(
+                        new TableCell(new Paragraph(new Run(new Text(order.ModerSurname)))),
+                        new TableCell(new Paragraph(new Run(new Text(order.Action)))),
+                        new TableCell(new Paragraph(new Run(new Text(order.Description)))),
+                        new TableCell(new Paragraph(new Run(new Text(order.ExecutionDate.ToString("dd.MM.yyyy")))))
                     );
                     table.Append(row);
                 }
