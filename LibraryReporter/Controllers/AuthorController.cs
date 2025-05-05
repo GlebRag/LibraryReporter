@@ -17,6 +17,7 @@ namespace LibraryReporter.Controllers
     {
         private readonly ILogger<AuthorController> _logger;
         private AuthService _authService;
+        private IActionsHistoryRepositoryReal _actionsHistoryRepository;
         private IAuthorRepositoryReal _authorRepository;
         private IUserRepositryReal _userRepositryReal;
         private WebDbContext _webDbContext;
@@ -24,11 +25,13 @@ namespace LibraryReporter.Controllers
 
         public AuthorController(ILogger<AuthorController> logger,
             IAuthorRepositoryReal authorRepository,
+            IActionsHistoryRepositoryReal actionsHistoryRepository,
             WebDbContext webDbContext,
             IUserRepositryReal userRepositryReal,
             AuthService authService,
             IWebHostEnvironment webHostEnvironment)
         {
+            _actionsHistoryRepository = actionsHistoryRepository;
             _authorRepository = authorRepository;
             _webDbContext = webDbContext;
             _userRepositryReal = userRepositryReal;
@@ -95,6 +98,10 @@ namespace LibraryReporter.Controllers
             };
 
             _authorRepository.Create(dataAuhor);
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Create);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .CreateAuthor(Enums.Action.Actions.Create, actionDescription, viewModel.Surname, viewModel.Name, moderName);
 
             viewModel.Success = true;
 
@@ -105,6 +112,10 @@ namespace LibraryReporter.Controllers
         public IActionResult DeleteAuthor(int authorId)
         {
             _authorRepository.Delete(authorId);
+
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Delete);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository.DeleteAuthor(Enums.Action.Actions.Delete, actionDescription, moderName);
 
             return RedirectToAction("Index");
         }
@@ -165,6 +176,10 @@ namespace LibraryReporter.Controllers
 
             _authorRepository.Update(dataAuthor, authorId);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Edit);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .EditAuthor(Enums.Action.Actions.Edit, actionDescription, viewModel.Surname, viewModel.Name, moderName);
 
 
             return RedirectToAction("Index");

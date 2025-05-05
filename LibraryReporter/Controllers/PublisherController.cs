@@ -11,6 +11,7 @@ using LibraryReporter.Data.Interfaces.Repositories;
 using LibraryReporter.Models.Author;
 using LibraryReporter.Models.Publisher;
 using LibraryReporter.Models.Reader;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 
 namespace LibraryReporter.Controllers
 {
@@ -18,6 +19,7 @@ namespace LibraryReporter.Controllers
     {
         private readonly ILogger<PublisherController> _logger;
         private AuthService _authService;
+        private IActionsHistoryRepositoryReal _actionsHistoryRepository;
         private IPublisherRepositoryReal _publisherRepository;
         private IUserRepositryReal _userRepositryReal;
         private WebDbContext _webDbContext;
@@ -25,11 +27,13 @@ namespace LibraryReporter.Controllers
 
         public PublisherController(ILogger<PublisherController> logger,
             IPublisherRepositoryReal publisherRepository,
+            IActionsHistoryRepositoryReal actionsHistoryRepository,
             WebDbContext webDbContext,
             IUserRepositryReal userRepositryReal,
             AuthService authService,
             IWebHostEnvironment webHostEnvironment)
         {
+            _actionsHistoryRepository = actionsHistoryRepository;
             _publisherRepository = publisherRepository;
             _webDbContext = webDbContext;
             _userRepositryReal = userRepositryReal;
@@ -97,6 +101,10 @@ namespace LibraryReporter.Controllers
 
             _publisherRepository.Create(dataPublisher);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Create);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .CreatePublisher(Enums.Action.Actions.Create, actionDescription, viewModel.Name, viewModel.Email, moderName);
 
             viewModel.Success = true;
 
@@ -107,6 +115,10 @@ namespace LibraryReporter.Controllers
         public IActionResult DeletePublisher(int publisherId)
         {
             _publisherRepository.Delete(publisherId);
+
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Delete);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository.DeletePublisher(Enums.Action.Actions.Delete, actionDescription, moderName);
 
             return RedirectToAction("Index");
         }
@@ -167,7 +179,10 @@ namespace LibraryReporter.Controllers
 
             _publisherRepository.Update(dataPublisher, publisherId);
 
-
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Edit);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .EditPublisher(Enums.Action.Actions.Edit, actionDescription, viewModel.Name, viewModel.Email, moderName);
 
             return RedirectToAction("Index");
         }

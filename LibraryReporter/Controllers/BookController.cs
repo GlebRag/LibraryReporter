@@ -166,6 +166,10 @@ namespace LibraryReporter.Controllers
         {
             _bookRepository.Delete(bookId);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Delete);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository.DeleteBook(Enums.Action.Actions.Delete, actionDescription, moderName);
+
             return RedirectToAction("Index");
         }
 
@@ -271,6 +275,10 @@ namespace LibraryReporter.Controllers
 
             _bookRepository.Update(dataBook, bookId);
 
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Edit);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .EditBook(Enums.Action.Actions.Edit, actionDescription, viewModel.BookName, viewModel.Barcode, moderName);
 
 
             return RedirectToAction("Index");
@@ -303,6 +311,7 @@ namespace LibraryReporter.Controllers
 
             return View(viewModel);
         }
+
         [IsAuthenticated]
         [HttpPost]
         public IActionResult IssueBook(IssueBookViewModel viewModel)

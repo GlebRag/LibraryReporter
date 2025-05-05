@@ -18,17 +18,20 @@ namespace LibraryReporter.Controllers
         private readonly ILogger<ReaderController> _logger;
         private AuthService _authService;
         private IReaderRepositoryReal _readerRepository;
+        private IActionsHistoryRepositoryReal _actionsHistoryRepository;
         private IUserRepositryReal _userRepositryReal;
         private WebDbContext _webDbContext;
         private IWebHostEnvironment _webHostEnvironment;
 
         public ReaderController(ILogger<ReaderController> logger,
             IReaderRepositoryReal readerRepository,
+            IActionsHistoryRepositoryReal actionsHistoryRepository,
             WebDbContext webDbContext,
             IUserRepositryReal userRepositryReal,
             AuthService authService,
             IWebHostEnvironment webHostEnvironment)
         {
+            _actionsHistoryRepository = actionsHistoryRepository;
             _readerRepository = readerRepository;
             _webDbContext = webDbContext;
             _userRepositryReal = userRepositryReal;
@@ -98,7 +101,9 @@ namespace LibraryReporter.Controllers
 
             _readerRepository.Create(dataReader);
 
-
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Create);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository.CreateReader(Enums.Action.Actions.Create, actionDescription, viewModel.Name, viewModel.Surname, moderName);
             viewModel.Success = true;
 
             return View("ReaderCreated", viewModel);
@@ -108,6 +113,10 @@ namespace LibraryReporter.Controllers
         public IActionResult DeleteReader(int readerId)
         {
             _readerRepository.Delete(readerId);
+
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Delete);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository.DeleteReader(Enums.Action.Actions.Delete, actionDescription, moderName);
 
             return RedirectToAction("Index");
         }
@@ -171,7 +180,10 @@ namespace LibraryReporter.Controllers
 
             _readerRepository.Update(dataReader, readerId);
 
-
+            var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Edit);
+            var moderName = _authService.GetName();
+            _actionsHistoryRepository
+                .EditReader(Enums.Action.Actions.Edit, actionDescription, viewModel.Name, viewModel.Surname, moderName);
 
             return RedirectToAction("Index");
         }
