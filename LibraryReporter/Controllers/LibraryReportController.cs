@@ -206,7 +206,32 @@ namespace LibraryReporter.Controllers
                 return BadRequest("Данные отсутствуют.");
             }
 
-            var uniquePublishers = model.Select(m => m.Publisher).Distinct().ToList();
+            // Подсчитываем общее количество книг
+            int totalInLibraryBooks = model.Count;
+
+            // Функция для поиска наиболее часто встречающегося элемента.
+            // Если ни один элемент не повторяется (все встречаются по 1 разу), возвращает "-"
+            string FindMostFrequent(IEnumerable<string> items)
+            {
+                // Фильтруем null и пустые строки, чтобы избежать ошибок
+                var filteredItems = items.Where(x => !string.IsNullOrEmpty(x));
+                var grouped = filteredItems.GroupBy(x => x);
+                if (!grouped.Any())
+                    return "-";
+                int maxCount = grouped.Max(g => g.Count());
+                // Если максимальное количество равно 1, значит повторов нет
+                if (maxCount == 1)
+                    return "-";
+                return grouped.OrderByDescending(g => g.Count()).First().Key;
+            }
+
+            // Вычисляем статистику
+            string mostFrequentAuthor = FindMostFrequent(model.Select(m => m.Author));
+            string mostFrequentPublisher = FindMostFrequent(model.Select(m => m.Publisher));
+            string mostFrequentBook = FindMostFrequent(model.Select(m => m.BookName));
+
+            // Устанавливаем сегодняшнюю дату в формате DateOnly
+            var dateToday = DateOnly.FromDateTime(DateTime.Now);
 
             // Создаем документ Word
             using (var wordDoc = WordprocessingDocument.Create("Report.docx", WordprocessingDocumentType.Document))
@@ -219,35 +244,22 @@ namespace LibraryReporter.Controllers
                 // Заголовок "Отчет"
                 var titleParagraph = new Paragraph(
                     new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
-                    new Run(new Text("Отчет")) { RunProperties = new RunProperties(new Bold()) }
+                    new Run(new Text("Отчет"))
+                    { RunProperties = new RunProperties(new Bold()) }
                 );
                 body.Append(titleParagraph);
 
-                // Подзаголовок с датами
-                string dateSubtitleText;
-                var dateToday = DateOnly.FromDateTime(DateTime.Now);
-                dateSubtitleText = $"Отчет книг в библиотеке на {dateToday:dd.MM.yyyy}";
+                // Подзаголовок с датой
                 var dateSubtitleParagraph = new Paragraph(
                     new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
-                    new Run(new Text(dateSubtitleText))
+                    new Run(new Text($"Отчет книг в библиотеке на {dateToday:dd.MM.yyyy}"))
                 );
                 body.Append(dateSubtitleParagraph);
 
+                // Разделитель перед таблицей
+                body.Append(new Paragraph(new Run(new Text(string.Empty))));
 
-                // Добавляем издателя, если он один
-                if (uniquePublishers.Count == 1)
-                {
-                    var publisherParagraph = new Paragraph(
-                        new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
-                        new Run(new Text($"Книги от издательства {uniquePublishers[0]}"))
-                    );
-                    body.Append(publisherParagraph);
-                }
-
-                // Разделение перед таблицей
-                body.Append(new Paragraph(new Run(new Text(""))));
-
-                // Добавляем таблицу
+                // Создаем таблицу
                 var table = new Table();
                 var tableProperties = new TableProperties(
                     new TableWidth { Width = "100%", Type = TableWidthUnitValues.Pct },
@@ -273,27 +285,57 @@ namespace LibraryReporter.Controllers
                 table.Append(headerRow);
 
                 // Заполняем таблицу данными
-                foreach (var order in model)
+                foreach (var book in model)
                 {
                     var row = new TableRow();
                     row.Append(
-                        new TableCell(new Paragraph(new Run(new Text(order.BookName)))),
-                        new TableCell(new Paragraph(new Run(new Text(order.Author)))),
-                        new TableCell(new Paragraph(new Run(new Text(order.Publisher)))),
-                        new TableCell(new Paragraph(new Run(new Text(order.Barcode))))
+                        new TableCell(new Paragraph(new Run(new Text(book.BookName)))),
+                        new TableCell(new Paragraph(new Run(new Text(book.Author)))),
+                        new TableCell(new Paragraph(new Run(new Text(book.Publisher)))),
+                        new TableCell(new Paragraph(new Run(new Text(book.Barcode))))
                     );
                     table.Append(row);
                 }
-
                 body.Append(table);
 
-                // Разделение перед подписью
-                body.Append(new Paragraph(new Run(new Text(""))));
+                // Добавляем сводную информацию (статистика) под таблицей
 
-                // Подпись и дата
+                // Абзац с количеством книг (жирным, по центру)
+                var booksCountParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Всего книг в библиотеке: {totalInLibraryBooks} на {dateToday:dd.MM.yyyy}"))
+                    { RunProperties = new RunProperties(new Bold()) }
+                );
+                body.Append(booksCountParagraph);
+
+                // Абзац с самым часто встречающимся автором
+                var statsParagraphAuthor = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Самый часто повторяющийся автор: {mostFrequentAuthor}"))
+                );
+                body.Append(statsParagraphAuthor);
+
+                // Абзац с самым часто встречающимся издателем
+                var statsParagraphPublisher = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Самый часто повторяющийся издатель: {mostFrequentPublisher}"))
+                );
+                body.Append(statsParagraphPublisher);
+
+                // Абзац с самой часто выдаваемой (повторяющейся) книгой
+                var statsParagraphBook = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Самая часто выдаваемая книга: {mostFrequentBook}"))
+                );
+                body.Append(statsParagraphBook);
+
+                // Разделитель перед подписью
+                body.Append(new Paragraph(new Run(new Text(string.Empty))));
+
+                // Подпись и дата в футере документа
                 var footerTable = new Table();
                 footerTable.AppendChild(new TableRow(
-                    new TableCell(new Paragraph(new Run(new Text($"Отчет создан сотрудником: {_authService.GetName()} Подпись: ____________  ")))),
+                    new TableCell(new Paragraph(new Run(new Text($"Отчет создан сотрудником: {_authService.GetName()}  Подпись: ____________")))),
                     new TableCell(new Paragraph(
                         new ParagraphProperties(new Justification { Val = JustificationValues.Right }),
                         new Run(new Text($"Дата: {DateTime.Now:dd.MM.yyyy}")))
@@ -305,8 +347,15 @@ namespace LibraryReporter.Controllers
                 mainPart.Document.Save();
             }
 
-            return File(System.IO.File.ReadAllBytes("Report.docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Report.docx");
+            // Отправляем созданный документ клиенту
+            return File(
+                System.IO.File.ReadAllBytes("Report.docx"),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "Report.docx"
+            );
         }
+
+
 
         [HttpPost]
         public IActionResult CreateReportForIssuedBooks([FromBody] List<IssuedBookReportViewModel> model)
@@ -317,13 +366,42 @@ namespace LibraryReporter.Controllers
                 return BadRequest("Данные отсутствуют.");
             }
 
-            // Находим минимальную и максимальную дату
+            // Подсчитываем количество книг
+            int totalIssuedBooks = model.Count;
+
+            // Определяем диапазон дат
+            var issueDates = model.Select(m => m.IssueDate).OrderBy(date => date).ToList();
+            string dateRange = issueDates.Count > 1
+                ? $"За период: {issueDates.First():dd.MM.yyyy} по {issueDates.Last():dd.MM.yyyy}"
+                : $"За {issueDates.First():dd.MM.yyyy}";
+
+            // Функция для поиска наиболее часто встречающегося элемента.
+            // Если ни один элемент не повторяется (максимальное количество повторов равно 1),
+            // возвращаем прочерк ("-").
+            string FindMostFrequent(IEnumerable<string> items)
+            {
+                var groups = items.GroupBy(x => x);
+                if (!groups.Any())
+                    return "-";
+                int maxCount = groups.Max(g => g.Count());
+                if (maxCount == 1)
+                    return "-";
+                return groups.OrderByDescending(g => g.Count()).First().Key;
+            }
+
+            // Вычисляем самые часто встречающиеся значения
+            string mostFrequentAuthor = FindMostFrequent(model.Select(m => m.Author));
+            string mostFrequentPublisher = FindMostFrequent(model.Select(m => m.Publisher));
+            string mostFrequentModerator = FindMostFrequent(model.Select(m => m.ModerSurname));
+            string mostFrequentBook = FindMostFrequent(model.Select(m => m.BookName));
+
+            // Находим минимальную и максимальную дату для подзаголовка
             var minDate = model.Min(m => m.IssueDate);
             var maxDate = model.Max(m => m.IssueDate);
 
-            // Проверяем количество уникальных фамилий
+            // Проверяем количество уникальных фамилий сотрудника
             var uniqueLastNames = model.Select(m => m.ModerSurname).Distinct().ToList();
-
+            // Проверяем количество уникальных издательств
             var uniquePublishers = model.Select(m => m.Publisher).Distinct().ToList();
 
             // Создаем документ Word
@@ -337,7 +415,10 @@ namespace LibraryReporter.Controllers
                 // Заголовок "Отчет"
                 var titleParagraph = new Paragraph(
                     new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
-                    new Run(new Text("Отчет")) { RunProperties = new RunProperties(new Bold()) }
+                    new Run(new Text("Отчет"))
+                    {
+                        RunProperties = new RunProperties(new Bold())
+                    }
                 );
                 body.Append(titleParagraph);
 
@@ -357,7 +438,7 @@ namespace LibraryReporter.Controllers
                 );
                 body.Append(dateSubtitleParagraph);
 
-                // Добавляем фамилию, если она одна
+                // Добавляем фамилию сотрудника, если она одна
                 if (uniqueLastNames.Count == 1)
                 {
                     var lastNameParagraph = new Paragraph(
@@ -377,10 +458,10 @@ namespace LibraryReporter.Controllers
                     body.Append(publisherParagraph);
                 }
 
-                // Разделение перед таблицей
+                // Разделитель перед таблицей
                 body.Append(new Paragraph(new Run(new Text(""))));
 
-                // Добавляем таблицу
+                // Создаем таблицу
                 var table = new Table();
                 var tableProperties = new TableProperties(
                     new TableWidth { Width = "100%", Type = TableWidthUnitValues.Pct },
@@ -395,7 +476,7 @@ namespace LibraryReporter.Controllers
                 );
                 table.AppendChild(tableProperties);
 
-                // Добавляем заголовки таблицы
+                // Заголовок таблицы
                 var headerRow = new TableRow();
                 headerRow.Append(
                     new TableCell(new Paragraph(new Run(new Text("Фамилия сотрудника")))),
@@ -428,7 +509,48 @@ namespace LibraryReporter.Controllers
 
                 body.Append(table);
 
-                // Разделение перед подписью
+                // Добавляем абзац с количеством книг (жирный текст)
+                var booksCountParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Всего выданных книг: {totalIssuedBooks}"))
+                    {
+                        RunProperties = new RunProperties(new Bold())
+                    }
+                );
+                body.Append(booksCountParagraph);
+
+                // Абзац с диапазоном дат (жирный текст)
+                var dateRangeParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text(dateRange))
+                    {
+                        RunProperties = new RunProperties(new Bold())
+                    }
+                );
+                body.Append(dateRangeParagraph);
+
+                // Добавляем статистику. Каждый параметр оформляем отдельным абзацем.
+                var statsParagraphAuthor = new Paragraph(
+                    new Run(new Text($"Самый часто повторяющийся автор: {mostFrequentAuthor}"))
+                );
+                body.Append(statsParagraphAuthor);
+
+                var statsParagraphPublisher = new Paragraph(
+                    new Run(new Text($"Самый часто повторяющийся издатель: {mostFrequentPublisher}"))
+                );
+                body.Append(statsParagraphPublisher);
+
+                var statsParagraphBook = new Paragraph(
+                    new Run(new Text($"Самая часто выдаваемая книга: {mostFrequentBook}"))
+                );
+                body.Append(statsParagraphBook);
+
+                var statsParagraphModerator = new Paragraph(
+                    new Run(new Text($"Самый активный сотрудник: {mostFrequentModerator}"))
+                );
+                body.Append(statsParagraphModerator);
+
+                // Разделитель перед подписью
                 body.Append(new Paragraph(new Run(new Text(""))));
 
                 // Подпись и дата
@@ -446,8 +568,14 @@ namespace LibraryReporter.Controllers
                 mainPart.Document.Save();
             }
 
-            return File(System.IO.File.ReadAllBytes("Report.docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Report.docx");
+            return File(
+                System.IO.File.ReadAllBytes("Report.docx"),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "Report.docx"
+            );
         }
+
+
 
 
 
@@ -460,10 +588,29 @@ namespace LibraryReporter.Controllers
                 return BadRequest("Данные отсутствуют.");
             }
 
-            // Находим минимальную и максимальную дату
+            // Находим минимальную и максимальную дату исполнения
             var minDate = model.Min(m => m.ExecutionDate);
             var maxDate = model.Max(m => m.ExecutionDate);
 
+            // Подсчитываем общее количество событий
+            int totalEvents = model.Count;
+
+            // Формируем текст для сводной информации, зависящий от диапазона дат
+            string summaryText;
+            if (minDate == maxDate)
+            {
+                summaryText = $"Всего событий: {totalEvents} за {minDate:dd.MM.yyyy}";
+            }
+            else
+            {
+                summaryText = $"Всего событий: {totalEvents} за период: {minDate:dd.MM.yyyy} по {maxDate:dd.MM.yyyy}";
+            }
+
+            // Вычисляем самого активного сотрудника (группируем по фамилии сотрудника)
+            var mostActiveGroup = model.GroupBy(m => m.ModerSurname)
+                                       .OrderByDescending(g => g.Count())
+                                       .FirstOrDefault();
+            string mostActiveEmployee = mostActiveGroup != null ? mostActiveGroup.Key : "-";
 
             // Создаем документ Word
             using (var wordDoc = WordprocessingDocument.Create("Report.docx", WordprocessingDocumentType.Document))
@@ -476,7 +623,10 @@ namespace LibraryReporter.Controllers
                 // Заголовок "Отчет"
                 var titleParagraph = new Paragraph(
                     new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
-                    new Run(new Text("Отчет")) { RunProperties = new RunProperties(new Bold()) }
+                    new Run(new Text("Отчет"))
+                    {
+                        RunProperties = new RunProperties(new Bold())
+                    }
                 );
                 body.Append(titleParagraph);
 
@@ -496,10 +646,10 @@ namespace LibraryReporter.Controllers
                 );
                 body.Append(dateSubtitleParagraph);
 
-                // Разделение перед таблицей
+                // Разделитель перед таблицей
                 body.Append(new Paragraph(new Run(new Text(""))));
 
-                // Добавляем таблицу
+                // Создаем таблицу
                 var table = new Table();
                 var tableProperties = new TableProperties(
                     new TableWidth { Width = "100%", Type = TableWidthUnitValues.Pct },
@@ -514,7 +664,7 @@ namespace LibraryReporter.Controllers
                 );
                 table.AppendChild(tableProperties);
 
-                // Добавляем заголовки таблицы
+                // Заголовки таблицы
                 var headerRow = new TableRow();
                 headerRow.Append(
                     new TableCell(new Paragraph(new Run(new Text("Фамилия сотрудника")))),
@@ -536,20 +686,36 @@ namespace LibraryReporter.Controllers
                     );
                     table.Append(row);
                 }
-
                 body.Append(table);
 
-                // Разделение перед подписью
-                body.Append(new Paragraph(new Run(new Text(""))));
+                // Добавляем сводную информацию – абзац с общим количеством событий и периодом
+                var summaryParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text(summaryText))
+                    {
+                        RunProperties = new RunProperties(new Bold())
+                    }
+                );
+                body.Append(summaryParagraph);
 
-                // Подпись и дата
+                // Абзац с самым активным сотрудником
+                var activeEmployeeParagraph = new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                    new Run(new Text($"Самый активный сотрудник: {mostActiveEmployee}"))
+                );
+                body.Append(activeEmployeeParagraph);
+
+                // Разделитель перед подписью
+                body.Append(new Paragraph(new Run(new Text(string.Empty))));
+
+                // Подпись и дата в футере документа
                 var footerTable = new Table();
                 footerTable.AppendChild(new TableRow(
-                    new TableCell(new Paragraph(new Run(new Text($"Отчет создан сотрудником: {_authService.GetName()} Подпись: ____________  ")))),
+                    new TableCell(new Paragraph(new Run(new Text($"Отчет создан сотрудником: {_authService.GetName()} Подпись: ____________")))),
                     new TableCell(new Paragraph(
                         new ParagraphProperties(new Justification { Val = JustificationValues.Right }),
-                        new Run(new Text($" Дата: {DateTime.Now:dd.MM.yyyy}")))
-                    )
+                        new Run(new Text($" Дата: {DateTime.Now:dd.MM.yyyy}"))
+                    ))
                 ));
                 body.Append(footerTable);
 
@@ -557,7 +723,13 @@ namespace LibraryReporter.Controllers
                 mainPart.Document.Save();
             }
 
-            return File(System.IO.File.ReadAllBytes("Report.docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Report.docx");
+            return File(
+                System.IO.File.ReadAllBytes("Report.docx"),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "Report.docx"
+            );
         }
+
+
     }
 }

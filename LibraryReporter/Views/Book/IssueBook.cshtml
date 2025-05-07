@@ -56,7 +56,6 @@
 </head>
 <body class="creationbook">
     <div class="container">
-
         <form action="/Book/IssueBook" method="post">
             <div class="form-group">
                 <label for="title">Название книги:</label>
@@ -101,7 +100,9 @@
             <input type="hidden" id="@Model.Id" name="Id" value="@Model.Id">
             <button type="submit" class="submit-btn">Выдать книгу</button>
         </form>
+        
     </div>
+    
 
     <script>
         // Функция открывает popup без использования rel="noopener", чтобы window.opener был доступен

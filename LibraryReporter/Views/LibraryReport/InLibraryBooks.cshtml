@@ -4,9 +4,7 @@
 @inject AuthService authService
 @inject UserService userService
 
-
 <div class="tableBody">
-
     <div class="search-section">
         <form method="post" action="/LibraryReport/SearchInLibraryBookReport" class="search-form">
             <input type="text" name="name" placeholder="Введите название книги" class="search-input" id="BookName" />
@@ -40,10 +38,66 @@
             }
         </tbody>
     </table>
+
+    <div id="librarySummary" style="margin-top:20px;">
+        <p id="totalBooks"></p>
+        <p id="mostFreqAuthor"></p>
+        <p id="mostFreqPublisher"></p>
+        <p id="mostFreqBook"></p>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // Функция для поиска наиболее часто встречающегося значения по указанному селектору
+    function findMostFrequentValue(selector) {
+        // Собираем значения ячеек из таблицы
+        const items = Array.from(document.querySelectorAll(selector))
+            .map(el => el.textContent.trim())
+            .filter(item => item.length > 0);
+        // Считаем количество вхождений каждого значения
+        const counts = items.reduce((acc, item) => {
+            acc[item] = (acc[item] || 0) + 1;
+            return acc;
+        }, {});
+
+        let mostFrequent = "-";
+        let maxCount = 1; // Если maxCount останется единицей, значит повторов нет
+
+        for (const item in counts) {
+            if (counts[item] > maxCount) {
+                mostFrequent = item;
+                maxCount = counts[item];
+            }
+        }
+
+        return mostFrequent;
+    }
+
+    // Функция обновления итоговой информации по книгам в библиотеке
+    function updateLibrarySummary() {
+        // Получаем все строки таблицы
+        const bookRows = document.querySelectorAll(".tableBook tbody tr");
+        const totalBooks = bookRows.length;
+        const todayDate = new Date().toLocaleDateString('ru-RU');
+
+        // Обновляем количество книг (выведем в элемент с id totalBooks)
+        document.getElementById("totalBooks").innerHTML =
+            `<strong>Всего книг в библиотеке на ${todayDate}:</strong> ${totalBooks}`;
+
+        // Для вычисления статистики:
+        // - Название книги — это 1-я колонка (nth-child(1))
+        // - Автор – 2-я колонка (nth-child(2))
+        // - Издатель – 3-я колонка (nth-child(3))
+        document.getElementById("mostFreqBook").innerHTML =
+            `<strong>Самая часто выдаваемая книга:</strong> ${findMostFrequentValue(".tableBook td:nth-child(1)")}`;
+        document.getElementById("mostFreqAuthor").innerHTML =
+            `<strong>Самый часто повторяющийся автор:</strong> ${findMostFrequentValue(".tableBook td:nth-child(2)")}`;
+        document.getElementById("mostFreqPublisher").innerHTML =
+            `<strong>Самый часто повторяющийся издатель:</strong> ${findMostFrequentValue(".tableBook td:nth-child(3)")}`;
+    }
+
+    // Функция создания отчета. При вызове собирает данные из Razor (Model) и отправляет на сервер.
     function createReport() {
         // Получаем текущую дату
         const today = new Date();
@@ -51,12 +105,12 @@
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-        }).replace(/\./g, '-'); // Форматируем дату в формате "20-04-2025"
+        }).replace(/\./g, '-'); // Пример: "20-04-2025"
 
-        // Получаем ViewModel из Razor в формате JSON
+        // Получаем данные модели из Razor в формате JSON
         const data = @Html.Raw(Json.Serialize(Model));
 
-        // Отправляем запрос на сервер
+        // Отправляем запрос на сервер для генерации отчета
         fetch('/LibraryReport/CreateReportForInLibraryBooks', {
             method: 'POST',
             headers: {
@@ -70,11 +124,17 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `Отчет_Книги_В_Библиотеке_${formattedDate}.docx`; // Добавляем дату в название файла
+                a.download = `Отчет_Книги_В_Библиотеке_${formattedDate}.docx`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
             })
             .catch(error => console.error('Ошибка при создании отчета:', error));
     }
+
+    // Вызываем функцию обновления итоговой информации после загрузки страницы
+    document.addEventListener("DOMContentLoaded", () => {
+        updateLibrarySummary();
+    });
 </script>
+

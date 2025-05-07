@@ -18,8 +18,11 @@ namespace LibraryReporter.Models.LibraryReport
         public DateOnly IssueDate { get; set; } // Дата выдачи книги
         public DateOnly AcceptanceLastDate { get; set; } // Последний день принятия книги
 
+
         public List<AuthorSurnameAndIdViewModel>? Authors { get; set; }
 
         public List<PublisherNameAndIdViewModel>? Publishers { get; set; }
+
+        
     }
 }

@@ -165,6 +165,11 @@ namespace LibraryReporter.Controllers
         [IsAuthenticated]
         public IActionResult DeleteBook(int bookId)
         {
+            if(_bookRepository.Get(bookId).Status == Enums.Status.Status.InArmas)
+            {
+                return RedirectToAction("Index");
+            }
+
             _bookRepository.Delete(bookId);
 
             var actionDescription = ActionsHelper.GetActionDescription(Enums.Action.Actions.Delete);

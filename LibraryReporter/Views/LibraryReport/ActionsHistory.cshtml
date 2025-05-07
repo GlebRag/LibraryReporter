@@ -48,10 +48,64 @@
             }
         </tbody>
     </table>
+    <div id="actionsSummary" style="margin-top:20px;"></div>
+    <div id="mostActiveEmployee" style="margin-top:10px;"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // Функция для поиска наиболее часто встречающегося значения в массиве.
+    // Если ни один элемент не повторяется (максимальное количество повторов равно 1) – возвращает прочерк ("-").
+    function findMostFrequent(items) {
+        const counts = items.reduce((acc, item) => {
+            acc[item] = (acc[item] || 0) + 1;
+            return acc;
+        }, {});
+        let mostFrequent = "-";
+        let maxCount = 1; // Если все встречаются только один раз, оставляем прочерк
+        for (const key in counts) {
+            if (counts[key] > maxCount) {
+                mostFrequent = key;
+                maxCount = counts[key];
+            }
+        }
+        return mostFrequent;
+    }
+
+    // Функция для обновления сводной информации на странице.
+    // Считает общее количество строк, извлекает даты из 4-го столбца (Дата исполнения),
+    // сортирует их и формирует текстовый вывод. Также вычисляет самого активного сотрудника (столбец 1).
+    function updateActionsSummary() {
+        // Получаем все строки таблицы (без заголовка)
+        const actionRows = document.querySelectorAll(".tableBook tbody tr");
+        const totalActions = actionRows.length;
+
+        // Извлекаем даты исполнения (из 4-го столбца, индекс 3)
+        const dates = Array.from(actionRows).map(row => row.cells[3].textContent.trim());
+        
+        let summaryText = `<strong>Всего событий:</strong> <strong>${totalActions}</strong>`;
+        if (dates.length > 0) {
+            // Сортируем даты (предполагается, что дата в формате, понятном Date())
+            const sortedDates = dates.sort((a, b) => new Date(a) - new Date(b));
+            const minDate = sortedDates[0];
+            const maxDate = sortedDates[sortedDates.length - 1];
+
+            if (minDate === maxDate) {
+                summaryText += ` <strong>за ${minDate}</strong>`;
+            } else {
+                summaryText += ` <strong>за период: ${minDate} по ${maxDate}</strong>`;
+            }
+        }
+        document.getElementById("actionsSummary").innerHTML = summaryText;
+
+        // Вычисляем самого активного сотрудника из первого столбца (Фамилия сотрудника)
+        const employees = Array.from(actionRows).map(row => row.cells[0].textContent.trim());
+        const mostActiveEmployee = findMostFrequent(employees);
+        document.getElementById("mostActiveEmployee").innerHTML =
+             `<strong>Самый активный сотрудник:</strong> ${mostActiveEmployee}`;
+    }
+
+    // Функция createReport() остается без изменений, она отвечает за генерацию отчёта.
     function createReport() {
         // Получаем текущую дату
         const today = new Date();
@@ -59,12 +113,12 @@
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-        }).replace(/\./g, '-'); // Форматируем дату в формате "20-04-2025"
+        }).replace(/\./g, '-'); // Например "20-04-2025"
 
         // Получаем ViewModel из Razor в формате JSON
         const data = @Html.Raw(Json.Serialize(Model));
 
-        // Отправляем запрос на сервер
+        // Отправляем запрос на сервер для создания отчёта
         fetch('/LibraryReport/CreateReportForActions', {
             method: 'POST',
             headers: {
@@ -78,12 +132,16 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `Отчет_Работы_Книжного_Фонда_${formattedDate}.docx`; // Добавляем дату в название файла
+                a.download = `Отчет_Работы_Книжного_Фонда_${formattedDate}.docx`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
             })
             .catch(error => console.error('Ошибка при создании отчета:', error));
     }
+
+    // Вызываем функцию обновления сводной информации после загрузки страницы
+    document.addEventListener("DOMContentLoaded", updateActionsSummary);
 </script>
+
 

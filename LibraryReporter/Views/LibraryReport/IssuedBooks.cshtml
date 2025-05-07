@@ -48,10 +48,75 @@
             }
         </tbody>
     </table>
+    <div id="issuedBooksSummary" class="issuedBooksSummary">
+        <strong>Всего выданных книг:</strong> <span id="totalIssuedBooks">0</span><br>
+        <strong>За период:</strong> <span id="minDate">-</span> по <span id="maxDate">-</span>
+    </div>
+
+    <div id="mostFrequentStats" class="mostFrequentStats">
+        <strong>Самый часто повторяющийся автор:</strong> <span id="mostFrequentAuthor">-</span><br>
+        <strong>Самый часто повторяющийся издатель:</strong> <span id="mostFrequentPublisher">-</span><br>
+        <strong>Самая часто выдаваемая книга:</strong> <span id="mostFrequentBook">-</span><br>
+        <strong>Самый активный сотрудник:</strong> <span id="mostFrequentModerator">-</span>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    function updateIssuedBooksSummary() {
+        const bookRows = document.querySelectorAll(".tableBook tbody tr");
+        const totalBooks = bookRows.length;
+
+        // Получаем список дат выдачи книг
+        const dates = Array.from(bookRows).map(row => row.cells[6].textContent);
+
+        let periodText = `<strong>Всего выданных книг:</strong> <strong>${totalBooks}</strong>`;
+
+        if (dates.length === 0) {
+            document.getElementById("issuedBooksSummary").innerHTML = periodText;
+        } else {
+            const sortedDates = dates.sort((a, b) => new Date(a) - new Date(b));
+            const minDate = sortedDates[0];
+            const maxDate = sortedDates[sortedDates.length - 1];
+
+            if (minDate === maxDate) {
+                periodText += ` <strong>за ${minDate}</strong>`;
+            } else {
+                periodText += ` <strong>за период: ${minDate} по ${maxDate}</strong>`;
+            }
+
+            document.getElementById("issuedBooksSummary").innerHTML = periodText;
+        }
+    }
+
+
+    function findMostFrequentValue(selector) {
+        const items = Array.from(document.querySelectorAll(selector)).map(el => el.textContent);
+        const counts = items.reduce((acc, item) => {
+            acc[item] = (acc[item] || 0) + 1;
+            return acc;
+        }, {});
+
+        let mostFrequent = "-";
+        let maxCount = 1;
+
+        for (const item in counts) {
+            if (counts[item] > maxCount) {
+                mostFrequent = item;
+                maxCount = counts[item];
+            }
+        }
+
+        return mostFrequent;
+    }
+
+    function updateFrequentStats() {
+        document.getElementById("mostFrequentAuthor").textContent = findMostFrequentValue(".tableBook td:nth-child(4)");
+        document.getElementById("mostFrequentPublisher").textContent = findMostFrequentValue(".tableBook td:nth-child(5)");
+        document.getElementById("mostFrequentBook").textContent = findMostFrequentValue(".tableBook td:nth-child(3)");
+        document.getElementById("mostFrequentModerator").textContent = findMostFrequentValue(".tableBook td:nth-child(1)");
+    }
+
     function createReport() {
         // Получаем текущую дату
         const today = new Date();
@@ -85,5 +150,13 @@
             })
             .catch(error => console.error('Ошибка при создании отчета:', error));
     }
+
+    // Вызываем функцию при загрузке страницы
+    document.addEventListener("DOMContentLoaded", () => {
+        updateIssuedBooksSummary();
+        updateFrequentStats();
+    });
+
 </script>
+
 

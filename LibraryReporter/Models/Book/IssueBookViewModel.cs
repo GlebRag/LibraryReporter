@@ -19,5 +19,7 @@ namespace LibraryReporter.Models.Book
 
         public List<ReaderSurnameAndIdViewModel>? Readers { get; set; }
 
+        
+
     }
 }
